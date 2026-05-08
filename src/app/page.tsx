@@ -1,4 +1,5 @@
 import { Nav } from "@/components/nav/Nav";
+import { Hero } from "@/components/hero/Hero";
 import { About } from "@/components/about/About";
 import { Projects } from "@/components/projects/Projects";
 import { Timeline } from "@/components/experience/Timeline";
@@ -15,7 +16,8 @@ export default function Home() {
       <NoiseOverlay />
       <Nav />
       <SectionIndicator />
-      <main className="relative pt-24">
+      <main className="relative">
+        <Hero />
         <About />
         <Projects />
         <Timeline />

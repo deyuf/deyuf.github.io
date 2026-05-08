@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 const SECTIONS = [
+  { id: "hero", label: "Intro" },
   { id: "about", label: "About" },
   { id: "projects", label: "Work" },
   { id: "experience", label: "Experience" },
@@ -12,7 +13,7 @@ const SECTIONS = [
 ];
 
 export function SectionIndicator() {
-  const [active, setActive] = useState<string>("about");
+  const [active, setActive] = useState<string>("hero");
 
   useEffect(() => {
     const observer = new IntersectionObserver(

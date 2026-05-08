@@ -41,7 +41,7 @@ export function Nav() {
       className="fixed inset-x-0 top-0 z-40"
     >
       <nav className="mx-auto flex max-w-[1280px] items-center justify-between px-5 py-4 md:px-12">
-        <a href="#top" className="flex items-center gap-2 font-mono text-sm">
+        <a href="#hero" className="flex items-center gap-2 font-mono text-sm">
           <span
             aria-hidden
             className="grid h-7 w-7 place-items-center rounded-md border border-border text-[10px]"

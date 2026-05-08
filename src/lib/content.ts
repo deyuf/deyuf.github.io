@@ -141,11 +141,11 @@ export const siteContent: SiteContent = {
       items: ["Isaac Sim", "MuJoCo", "Synthetic Data"],
     },
     {
-      title: "ML Systems",
+      title: "Deep Learning",
       description:
-        "Deep learning frameworks, distributed training and the systems that move data fast.",
+        "Deep learning frameworks and the model-training stack behind modern robotic perception and policy learning.",
       icon: Layers,
-      items: ["PyTorch", "CUDA", "Distributed Training"],
+      items: ["PyTorch", "Deep Learning", "Machine Learning"],
     },
     {
       title: "Engineering",
@@ -176,7 +176,6 @@ export const siteContent: SiteContent = {
     emailParts: { user: "ZnVkZXl1MA==", domain: "Z21haWwuY29t" }, // base64 obfuscation
     github: [
       { handle: "deyuf", url: "https://github.com/deyuf", label: "Personal" },
-      { handle: "FDecaYed", url: "https://github.com/FDecaYed", label: "Open source" },
     ],
     linkedin: "https://www.linkedin.com/in/deyu-fu",
   },

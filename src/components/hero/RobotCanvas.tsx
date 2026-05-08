@@ -9,74 +9,46 @@ import {
   Sparkles,
 } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { useRef, useState, useEffect } from "react";
-import type { Group } from "three";
+import { useRef, useEffect, useMemo } from "react";
+import type { Group, Vector3 } from "three";
 import * as THREE from "three";
 
 const ACCENT = "#00e0b8";
 
+const L_UPPER = 0.85; // shoulder → elbow
+const L_LOWER = 0.7; // elbow → wrist1
+const TAIL = 0.45 + 0.34; // wrist1 → tip (forearm + gripper offset)
+
 function ArmSegment({
   length,
-  color = "#1a1a1f",
   radius = 0.12,
 }: {
   length: number;
-  color?: string;
   radius?: number;
 }) {
   return (
-    <group position={[0, length / 2, 0]}>
-      <mesh castShadow>
-        <cylinderGeometry args={[radius * 0.85, radius, length, 32]} />
-        <meshPhysicalMaterial
-          color={color}
-          metalness={0.85}
-          roughness={0.3}
-          clearcoat={0.6}
-          clearcoatRoughness={0.25}
-        />
-      </mesh>
-      {/* Inner accent stripe */}
-      <mesh>
-        <cylinderGeometry
-          args={[radius * 0.86, radius * 1.02, length * 0.06, 32]}
-        />
-        <meshStandardMaterial
-          color={ACCENT}
-          emissive={ACCENT}
-          emissiveIntensity={1.4}
-          toneMapped={false}
-        />
-      </mesh>
-    </group>
+    <mesh position={[0, length / 2, 0]} castShadow>
+      <cylinderGeometry args={[radius * 0.85, radius, length, 32]} />
+      <meshPhysicalMaterial
+        color="#1a1a1f"
+        metalness={0.85}
+        roughness={0.32}
+        clearcoat={0.55}
+        clearcoatRoughness={0.25}
+      />
+    </mesh>
   );
 }
 
-function Joint({
-  accent = false,
-  size = 0.18,
-}: {
-  accent?: boolean;
-  size?: number;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
-  useFrame((state) => {
-    if (accent && ref.current) {
-      const pulse = 0.85 + Math.sin(state.clock.elapsedTime * 1.6) * 0.35;
-      const mat = ref.current.material as THREE.MeshStandardMaterial;
-      if (mat) mat.emissiveIntensity = pulse;
-    }
-  });
+function NeutralJoint({ size = 0.16 }: { size?: number }) {
   return (
-    <mesh ref={ref} castShadow>
+    <mesh castShadow>
       <sphereGeometry args={[size, 32, 32]} />
-      <meshStandardMaterial
-        color={accent ? ACCENT : "#23232a"}
-        metalness={accent ? 0.2 : 0.85}
-        roughness={accent ? 0.3 : 0.25}
-        emissive={accent ? ACCENT : "#000000"}
-        emissiveIntensity={accent ? 1 : 0}
-        toneMapped={!accent}
+      <meshPhysicalMaterial
+        color="#23232a"
+        metalness={0.9}
+        roughness={0.22}
+        clearcoat={0.5}
       />
     </mesh>
   );
@@ -85,7 +57,7 @@ function Joint({
 function Gripper() {
   return (
     <group>
-      <Joint accent size={0.16} />
+      <NeutralJoint size={0.15} />
       {/* Wrist plate */}
       <mesh position={[0, 0.08, 0]} castShadow>
         <cylinderGeometry args={[0.13, 0.11, 0.06, 24]} />
@@ -96,13 +68,13 @@ function Gripper() {
           clearcoat={0.5}
         />
       </mesh>
-      {/* Gripper fingers */}
+      {/* Fingers */}
       <mesh position={[0.07, 0.2, 0]} castShadow>
         <boxGeometry args={[0.04, 0.22, 0.12]} />
         <meshPhysicalMaterial
           color="#15151a"
-          metalness={0.8}
-          roughness={0.3}
+          metalness={0.85}
+          roughness={0.28}
           clearcoat={0.4}
         />
       </mesh>
@@ -110,18 +82,18 @@ function Gripper() {
         <boxGeometry args={[0.04, 0.22, 0.12]} />
         <meshPhysicalMaterial
           color="#15151a"
-          metalness={0.8}
-          roughness={0.3}
+          metalness={0.85}
+          roughness={0.28}
           clearcoat={0.4}
         />
       </mesh>
-      {/* Tip dot */}
+      {/* Single emissive tip — the only glowing point on the arm itself */}
       <mesh position={[0, 0.34, 0]}>
-        <sphereGeometry args={[0.025, 16, 16]} />
+        <sphereGeometry args={[0.028, 16, 16]} />
         <meshStandardMaterial
           color={ACCENT}
           emissive={ACCENT}
-          emissiveIntensity={3}
+          emissiveIntensity={3.2}
           toneMapped={false}
         />
       </mesh>
@@ -129,36 +101,94 @@ function Gripper() {
   );
 }
 
-function Arm({ pointer }: { pointer: THREE.Vector2 }) {
+function clampMag(v: number, max: number) {
+  return Math.max(-max, Math.min(max, v));
+}
+
+function Arm({ targetWorld }: { targetWorld: React.MutableRefObject<Vector3> }) {
   const root = useRef<Group>(null);
   const j1 = useRef<Group>(null);
   const j2 = useRef<Group>(null);
   const j3 = useRef<Group>(null);
   const j4 = useRef<Group>(null);
 
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    // Constrained ranges to keep arm inside the frame
-    if (root.current) {
-      const targetY = Math.sin(t * 0.3) * 0.35 + pointer.x * 0.25;
-      root.current.rotation.y = THREE.MathUtils.damp(
-        root.current.rotation.y,
-        targetY,
-        2,
-        0.016
+  // Shoulder origin in arm-root local space (after scale 0.78 → world)
+  // Arm-root sits at (0, -0.95, 0) world before scale; inside the group, shoulder is at y=0.32
+  // We compute IK in arm-root local space directly.
+  const SHOULDER_Y = 0.32;
+
+  useFrame((_, delta) => {
+    if (!root.current) return;
+    const dt = Math.min(delta, 0.05);
+
+    // Convert world target into arm-root local space (root is in world)
+    const localTarget = root.current.worldToLocal(targetWorld.current.clone());
+
+    // Base yaw — face target horizontally (XZ plane)
+    const targetYaw =
+      root.current.rotation.y + Math.atan2(localTarget.x, localTarget.z);
+    root.current.rotation.y = THREE.MathUtils.damp(
+      root.current.rotation.y,
+      targetYaw,
+      4,
+      dt
+    );
+
+    // After (eventual) yaw, target sits in the YZ plane of arm-root
+    const horiz = Math.sqrt(localTarget.x ** 2 + localTarget.z ** 2);
+    const vy = localTarget.y - SHOULDER_Y;
+
+    // 2-bone IK on shoulder (L_UPPER) + virtual lower (L_LOWER + TAIL)
+    const L2 = L_LOWER + TAIL;
+    let dist = Math.sqrt(horiz * horiz + vy * vy);
+    const reachMax = L_UPPER + L2 - 0.05;
+    const reachMin = Math.abs(L_UPPER - L2) + 0.05;
+    dist = THREE.MathUtils.clamp(dist, reachMin, reachMax);
+
+    // Angle from +Y to target direction (tilt forward)
+    const a = Math.atan2(horiz, Math.max(vy, -dist));
+    const cosB = (L_UPPER * L_UPPER + dist * dist - L2 * L2) / (2 * L_UPPER * dist);
+    const b = Math.acos(THREE.MathUtils.clamp(cosB, -1, 1));
+    const targetShoulderX = clampMag(a - b, Math.PI * 0.55);
+
+    const cosE = (L_UPPER * L_UPPER + L2 * L2 - dist * dist) / (2 * L_UPPER * L2);
+    const targetElbow = Math.PI - Math.acos(THREE.MathUtils.clamp(cosE, -1, 1));
+
+    if (j1.current) {
+      j1.current.rotation.x = THREE.MathUtils.damp(
+        j1.current.rotation.x,
+        targetShoulderX,
+        4,
+        dt
       );
     }
-    if (j1.current) {
-      j1.current.rotation.x = -0.35 + Math.sin(t * 0.45) * 0.18;
-    }
     if (j2.current) {
-      j2.current.rotation.x = 0.85 + Math.cos(t * 0.5) * 0.22;
+      j2.current.rotation.x = THREE.MathUtils.damp(
+        j2.current.rotation.x,
+        targetElbow,
+        4,
+        dt
+      );
     }
+    // Wrist 1 — relax to neutral so the chain reads cleanly
     if (j3.current) {
-      j3.current.rotation.x = -0.25 + Math.sin(t * 0.6) * 0.15 + pointer.y * 0.2;
+      j3.current.rotation.x = THREE.MathUtils.damp(
+        j3.current.rotation.x,
+        0,
+        4,
+        dt
+      );
     }
+    // Wrist 2 (twist) — keep a small idle so the gripper isn't dead
     if (j4.current) {
-      j4.current.rotation.z = Math.sin(t * 0.8) * 0.45;
+      const t = performance.now() * 0.0008;
+      const targetTwist = Math.sin(t) * 0.18;
+      j4.current.rotation.z = THREE.MathUtils.damp(
+        j4.current.rotation.z,
+        targetTwist,
+        3,
+        dt
+      );
     }
   });
 
@@ -174,13 +204,13 @@ function Arm({ pointer }: { pointer: THREE.Vector2 }) {
           clearcoat={0.3}
         />
       </mesh>
-      {/* Accent ring on base */}
+      {/* Single accent ring on base — the only base-level glow */}
       <mesh position={[0, 0.1, 0]}>
-        <torusGeometry args={[0.55, 0.012, 16, 64]} />
+        <torusGeometry args={[0.55, 0.011, 16, 64]} />
         <meshStandardMaterial
           color={ACCENT}
           emissive={ACCENT}
-          emissiveIntensity={1.5}
+          emissiveIntensity={1.2}
           toneMapped={false}
         />
       </mesh>
@@ -195,19 +225,19 @@ function Arm({ pointer }: { pointer: THREE.Vector2 }) {
       </mesh>
       {/* Shoulder */}
       <group position={[0, 0.32, 0]}>
-        <Joint accent size={0.2} />
+        <NeutralJoint size={0.18} />
         <group ref={j1}>
-          <ArmSegment length={0.85} />
+          <ArmSegment length={L_UPPER} />
           {/* Elbow */}
-          <group position={[0, 0.85, 0]}>
-            <Joint size={0.16} />
+          <group position={[0, L_UPPER, 0]}>
+            <NeutralJoint size={0.14} />
             <group ref={j2}>
-              <ArmSegment length={0.7} />
+              <ArmSegment length={L_LOWER} />
               {/* Wrist 1 */}
-              <group position={[0, 0.7, 0]}>
-                <Joint accent size={0.14} />
+              <group position={[0, L_LOWER, 0]}>
+                <NeutralJoint size={0.12} />
                 <group ref={j3}>
-                  <ArmSegment length={0.45} radius={0.09} />
+                  <ArmSegment length={0.45} radius={0.085} />
                   {/* Wrist 2 (twist) */}
                   <group position={[0, 0.45, 0]}>
                     <group ref={j4}>
@@ -224,6 +254,59 @@ function Arm({ pointer }: { pointer: THREE.Vector2 }) {
   );
 }
 
+function MouseTarget({
+  targetWorld,
+}: {
+  targetWorld: React.MutableRefObject<Vector3>;
+}) {
+  const { camera, size } = useThree();
+  const ndc = useRef(new THREE.Vector2(0, 0));
+  const desired = useRef(new THREE.Vector3(0, 0.6, 1.5));
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+
+  // Track mouse globally so the arm follows even when cursor leaves the canvas.
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      // Convert client coordinates to NDC, but use the canvas bounding rect
+      // so motion stays correctly aligned regardless of canvas position.
+      const canvas = document.querySelector(
+        "section#hero canvas"
+      ) as HTMLCanvasElement | null;
+      const rect = canvas?.getBoundingClientRect();
+      if (!rect) return;
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      ndc.current.x = THREE.MathUtils.clamp(x, -1.4, 1.4);
+      ndc.current.y = THREE.MathUtils.clamp(y, -1.4, 1.4);
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+
+  useFrame((_, delta) => {
+    const dt = Math.min(delta, 0.05);
+    raycaster.setFromCamera(ndc.current, camera);
+
+    // Project the ray onto a plane in front of the arm. Plane normal faces the
+    // camera, anchored 0.6 units in front of the arm root. Falling back to a
+    // sphere of fixed distance keeps the target stable when the ray is parallel.
+    const planeNormal = camera.getWorldDirection(new THREE.Vector3()).negate();
+    const plane = new THREE.Plane(planeNormal, 1.4);
+    const hit = new THREE.Vector3();
+    if (!raycaster.ray.intersectPlane(plane, hit)) {
+      hit.copy(camera.position).add(
+        raycaster.ray.direction.clone().multiplyScalar(4.5)
+      );
+    }
+    desired.current.copy(hit);
+
+    targetWorld.current.lerp(desired.current, 1 - Math.pow(0.001, dt));
+    void size;
+  });
+
+  return null;
+}
+
 function OrbitingAccent() {
   const ref = useRef<THREE.PointLight>(null);
   useFrame((state) => {
@@ -234,43 +317,43 @@ function OrbitingAccent() {
       ref.current.position.y = 0.8 + Math.sin(t * 0.6) * 0.4;
     }
   });
-  return <pointLight ref={ref} color={ACCENT} intensity={4} distance={6} />;
+  return <pointLight ref={ref} color={ACCENT} intensity={3} distance={6} />;
 }
 
-function Scene({ pointer }: { pointer: THREE.Vector2 }) {
-  const { camera } = useThree();
-  useEffect(() => {
-    camera.lookAt(0, 0.4, 0);
-  }, [camera]);
-
+function Scene({
+  targetWorld,
+}: {
+  targetWorld: React.MutableRefObject<Vector3>;
+}) {
   return (
     <>
-      <ambientLight intensity={0.25} />
+      <ambientLight intensity={0.28} />
       <directionalLight
         castShadow
         position={[3, 6, 4]}
-        intensity={1.2}
+        intensity={1.15}
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
       />
-      <pointLight position={[-3, 2, -3]} intensity={1.4} color="#5a8cff" />
+      <pointLight position={[-3, 2, -3]} intensity={1.2} color="#5a8cff" />
       <OrbitingAccent />
 
       <Float
-        speed={0.9}
-        rotationIntensity={0.08}
-        floatIntensity={0.12}
-        floatingRange={[-0.04, 0.04]}
+        speed={0.7}
+        rotationIntensity={0.05}
+        floatIntensity={0.08}
+        floatingRange={[-0.03, 0.03]}
       >
-        <Arm pointer={pointer} />
+        <Arm targetWorld={targetWorld} />
       </Float>
 
-      {/* Tech-grid floor */}
+      <MouseTarget targetWorld={targetWorld} />
+
       <Grid
         position={[0, -1.7, 0]}
         args={[14, 14]}
         cellSize={0.4}
-        cellThickness={0.6}
+        cellThickness={0.5}
         cellColor="#1a3a35"
         sectionSize={2}
         sectionThickness={1}
@@ -289,12 +372,12 @@ function Scene({ pointer }: { pointer: THREE.Vector2 }) {
       />
 
       <Sparkles
-        count={36}
+        count={28}
         size={2}
         scale={5}
-        speed={0.3}
+        speed={0.25}
         color={ACCENT}
-        opacity={0.6}
+        opacity={0.5}
       />
 
       <Environment preset="city" />
@@ -303,19 +386,7 @@ function Scene({ pointer }: { pointer: THREE.Vector2 }) {
 }
 
 export function RobotCanvas() {
-  const [pointer, setPointer] = useState(() => new THREE.Vector2(0, 0));
-  const target = useRef(new THREE.Vector2(0, 0));
-
-  useEffect(() => {
-    let raf = 0;
-    const loop = () => {
-      pointer.lerp(target.current, 0.08);
-      setPointer(new THREE.Vector2(pointer.x, pointer.y));
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [pointer]);
+  const targetWorld = useRef<Vector3>(new THREE.Vector3(0.5, 0.6, 1.4));
 
   return (
     <Canvas
@@ -324,21 +395,13 @@ export function RobotCanvas() {
       camera={{ position: [3.2, 2.0, 4.6], fov: 38 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       style={{ background: "transparent" }}
-      onPointerMove={(e) => {
-        const rect = (e.target as HTMLElement).getBoundingClientRect();
-        target.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        target.current.y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-      }}
-      onPointerLeave={() => {
-        target.current.set(0, 0);
-      }}
     >
-      <Scene pointer={pointer} />
+      <Scene targetWorld={targetWorld} />
       <EffectComposer>
         <Bloom
           mipmapBlur
-          intensity={0.9}
-          luminanceThreshold={0.25}
+          intensity={0.7}
+          luminanceThreshold={0.3}
           luminanceSmoothing={0.3}
           radius={0.7}
         />

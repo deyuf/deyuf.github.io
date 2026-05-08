@@ -47,10 +47,27 @@ export function MagneticButton({
 
   const base =
     "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors";
-  const styles =
+
+  const inlineStyle =
     variant === "primary"
-      ? "bg-fg text-bg hover:bg-accent hover:text-bg"
-      : "border border-border text-fg hover:border-border-strong hover:bg-surface";
+      ? {
+          background: "var(--color-fg)",
+          color: "var(--color-bg)",
+          x: sx,
+          y: sy,
+        }
+      : {
+          background: "transparent",
+          color: "var(--color-fg)",
+          border: "1px solid var(--color-border)",
+          x: sx,
+          y: sy,
+        };
+
+  const variantClass =
+    variant === "primary"
+      ? "hover:opacity-90"
+      : "hover:bg-surface";
 
   return (
     <motion.a
@@ -60,8 +77,8 @@ export function MagneticButton({
       rel={external ? "noopener noreferrer" : undefined}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
-      style={{ x: sx, y: sy }}
-      className={`${base} ${styles} ${className}`}
+      style={inlineStyle}
+      className={`${base} ${variantClass} ${className}`}
     >
       {children}
     </motion.a>

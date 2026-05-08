@@ -10,7 +10,6 @@ Live at [deyuf.github.io](https://deyuf.github.io).
 - **React 19** + **TypeScript**
 - **Tailwind CSS v4** (`@theme` tokens)
 - **Motion** (Framer Motion) for component animation
-- **React Three Fiber** + **drei** for the hero 3D manipulator
 - **lucide-react** for line icons
 - **Inter Tight** + **JetBrains Mono** via `next/font/google`
 
@@ -44,8 +43,7 @@ src/
 ├── app/                 layout, page composition, not-found, globals.css
 ├── components/
 │   ├── nav/             top navigation
-│   ├── hero/            hero section + R3F manipulator
-│   ├── about/           about section
+│   ├── about/           page-opening intro
 │   ├── projects/        featured projects
 │   ├── experience/      timeline + education
 │   ├── publications/    research output

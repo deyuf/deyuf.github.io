@@ -78,24 +78,6 @@ export const siteContent: SiteContent = {
         "Robot manipulation and motion planning. Bridged research prototypes and production-bound robot stacks.",
       tags: ["Motion Planning", "Manipulation"],
     },
-    {
-      period: "May 2023 — Oct 2023",
-      role: "Software Engineer",
-      org: "Siemens",
-      location: "Munich, Germany",
-      summary:
-        "Software engineering on industrial-grade systems and tooling.",
-      tags: ["Software Engineering", "Industrial Systems"],
-    },
-    {
-      period: "Oct 2022 — Mar 2023",
-      role: "Teaching Assistant · Foundations of AI",
-      org: "Technical University of Munich",
-      location: "Munich, Germany",
-      summary:
-        "Taught AI fundamentals — search, planning, learning and reasoning — to graduate students.",
-      tags: ["Teaching", "Artificial Intelligence"],
-    },
   ],
   education: [
     {

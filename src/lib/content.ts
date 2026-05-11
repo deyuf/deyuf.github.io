@@ -17,7 +17,7 @@ export const siteContent: SiteContent = {
     // To use a real avatar, drop the image at public/avatar.png and change this
     // value to "/avatar.png". A stylized SVG placeholder ships by default.
     avatar: "/avatar.png",
-    eyebrow: "Robotics Software Engineer",
+    eyebrow: "Robotics & AI Engineer",
     tagline:
         "I bridge the gap between the digital and physical worlds, giving AI a tangible presence.",
     heroSubhead:
@@ -215,7 +215,7 @@ export const siteContent: SiteContent = {
     experience: [
         {
             period: "Aug 2024 — Present",
-            role: "Robotics Software Engineer",
+            role: "Robotics & AI Engineer",
             org: "Agile Robots SE",
             location: "Munich, Germany",
             summary:

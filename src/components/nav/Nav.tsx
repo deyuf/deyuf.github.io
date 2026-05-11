@@ -2,6 +2,8 @@
 
 import { motion, useScroll, useTransform } from "motion/react";
 import { siteContent } from "@/lib/content";
+import { useTheme } from "@/lib/theme";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const LINKS = [
   { id: "about", label: "About" },
@@ -12,21 +14,27 @@ const LINKS = [
 ];
 
 export function Nav() {
+  const { theme } = useTheme();
   const { scrollY } = useScroll();
   const backdropFilter = useTransform(
     scrollY,
     [0, 80],
     ["blur(0px)", "blur(12px)"]
   );
-  const bg = useTransform(
-    scrollY,
-    [0, 80],
-    ["rgba(10,10,10,0)", "rgba(10,10,10,0.72)"]
-  );
+
+  const bgFrom = theme === "light" ? "rgba(244,240,232,0)" : "rgba(10,10,10,0)";
+  const bgTo =
+    theme === "light" ? "rgba(244,240,232,0.78)" : "rgba(10,10,10,0.72)";
+  const borderTo =
+    theme === "light"
+      ? "rgba(30,25,20,0.10)"
+      : "rgba(255,255,255,0.08)";
+
+  const bg = useTransform(scrollY, [0, 80], [bgFrom, bgTo]);
   const border = useTransform(
     scrollY,
     [0, 80],
-    ["rgba(255,255,255,0)", "rgba(255,255,255,0.08)"]
+    [theme === "light" ? "rgba(30,25,20,0)" : "rgba(255,255,255,0)", borderTo]
   );
 
   return (
@@ -64,14 +72,17 @@ export function Nav() {
             </li>
           ))}
         </ul>
-        <a
-          href={siteContent.contact.linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden rounded-full border border-border px-4 py-1.5 text-xs font-mono uppercase tracking-widest transition hover:border-border-strong md:inline-flex"
-        >
-          LinkedIn
-        </a>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <a
+            href={siteContent.contact.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden rounded-full border border-border px-4 py-1.5 text-xs font-mono uppercase tracking-widest transition hover:border-border-strong md:inline-flex"
+          >
+            LinkedIn
+          </a>
+        </div>
       </nav>
     </motion.header>
   );

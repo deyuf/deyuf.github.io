@@ -4,6 +4,18 @@ export interface ProjectLink {
   code?: string;
   demo?: string;
   paper?: string;
+  marketplace?: string;
+  pypi?: string;
+}
+
+export interface ProjectImage {
+  src: string;
+  caption?: string;
+}
+
+export interface ProjectMeta {
+  label: string;
+  value: string;
 }
 
 export interface Project {
@@ -11,6 +23,12 @@ export interface Project {
   title: string;
   tagline: string;
   description: string;
+  longDescription?: string[];
+  features?: string[];
+  install?: string;
+  meta?: ProjectMeta[];
+  coverImage?: string;
+  gallery?: ProjectImage[];
   tags: string[];
   links: ProjectLink;
   year: string;
@@ -61,6 +79,7 @@ export interface QuickFact {
 export interface SiteContent {
   name: string;
   initials: string;
+  avatar?: string;
   tagline: string;
   eyebrow: string;
   heroSubhead: string;

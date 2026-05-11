@@ -126,11 +126,19 @@ export const siteContent: SiteContent = {
                 { label: "License", value: "MIT" },
             ],
             coverImage:
-                "https://raw.githubusercontent.com/deyuf/urdf-studio/main/media/icon.png",
+                "https://raw.githubusercontent.com/deyuf/urdf-studio/main/media/screenshots/viewer-joints.png",
             gallery: [
                 {
-                    src: "https://raw.githubusercontent.com/deyuf/urdf-studio/main/media/icon.png",
-                    caption: "URDF Studio — VS Code extension icon.",
+                    src: "https://raw.githubusercontent.com/deyuf/urdf-studio/main/media/screenshots/viewer-joints.png",
+                    caption: "Live 3D viewport with the Franka Research 3 loaded — toolbar, joint sliders and link / joint counts on the right.",
+                },
+                {
+                    src: "https://raw.githubusercontent.com/deyuf/urdf-studio/main/media/screenshots/render-collision.png",
+                    caption: "Collision-only render mode — FR3's self-collision primitives (capsules, cylinders) overlaid on the visual geometry.",
+                },
+                {
+                    src: "https://raw.githubusercontent.com/deyuf/urdf-studio/main/media/screenshots/inspector-selected.png",
+                    caption: "Inspector panel with `fr3_link4` selected — highlight bounding box, parent joint details, axis, limits, child joints, mesh paths.",
                 },
             ],
             tags: ["TypeScript", "Three.js", "URDF", "VS Code"],

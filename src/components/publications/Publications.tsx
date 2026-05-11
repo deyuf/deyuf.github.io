@@ -23,7 +23,7 @@ export function Publications() {
                   className="rounded-full border px-3 py-1 text-center font-mono text-[11px] uppercase tracking-widest"
                   style={{
                     color: "var(--color-accent)",
-                    borderColor: "rgba(0,224,184,0.3)",
+                    borderColor: "color-mix(in oklab, var(--color-accent) 30%, transparent)",
                   }}
                 >
                   {p.venue} {p.year}

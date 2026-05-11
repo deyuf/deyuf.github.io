@@ -1,6 +1,6 @@
 # deyuf.github.io
 
-Personal portfolio of **Deyu Fu** — Robotics Software Engineer @ Agile Robots SE, Munich. Live at [deyuf.github.io](https://deyuf.github.io).
+Personal portfolio of **Deyu Fu** — Robotics & AI Engineer @ Agile Robots SE, Munich. Live at [deyuf.github.io](https://deyuf.github.io).
 
 ## Stack
 

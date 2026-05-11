@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Placeholder avatar">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#1f1e1b"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </radialGradient>
+    <linearGradient id="halo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00e0b8" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#00e0b8" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="32" fill="url(#bg)"/>
+  <rect width="256" height="256" rx="32" fill="url(#halo)"/>
+  <!-- Face -->
+  <circle cx="128" cy="104" r="40" fill="#3a342c" stroke="rgba(245,245,244,0.10)" stroke-width="1.5"/>
+  <!-- Glasses -->
+  <circle cx="113" cy="100" r="11" fill="none" stroke="#00e0b8" stroke-width="2"/>
+  <circle cx="143" cy="100" r="11" fill="none" stroke="#00e0b8" stroke-width="2"/>
+  <line x1="124" y1="100" x2="132" y2="100" stroke="#00e0b8" stroke-width="2"/>
+  <!-- Body / shoulders -->
+  <path d="M 56 240 Q 56 170 128 158 Q 200 170 200 240 Z" fill="#3a342c" stroke="rgba(245,245,244,0.08)" stroke-width="1.5"/>
+  <!-- Caption -->
+  <text x="128" y="222" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="9" letter-spacing="2" fill="#00e0b8" opacity="0.7">PLACEHOLDER</text>
+</svg>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter_Tight, JetBrains_Mono } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { siteContent } from "@/lib/content";
 import "./globals.css";
 
@@ -47,6 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${interTight.variable} ${jetbrainsMono.variable}`}>
       <body>{children}</body>
+      <GoogleAnalytics gaId="G-YFS4ZHWMV9" />
     </html>
   );
 }

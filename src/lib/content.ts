@@ -22,13 +22,12 @@ export const siteContent: SiteContent = {
   about: [
     "I'm a robotics software engineer based in Munich, working at the intersection of reinforcement learning, dexterous manipulation and physical simulation.",
     "My focus is closing the loop between high-fidelity simulation and the messy real world — the perception, control and policy stacks that let humanoid and manipulator systems act with intent.",
-    "Before robotics, I trained in vehicle engineering, then specialized in robotics, cognition and intelligence at TUM. Along the way I shipped infrastructure at Siemens, taught AI foundations, and published on weakly-supervised Sim2Real perception.",
   ],
   quickFacts: [
     { label: "Based in", value: "Munich, Germany" },
     { label: "Focus", value: "Reinforcement Learning · Dexterous Manipulation · Sim2Real" },
     { label: "Stack", value: "Python · C++ · ROS · PyTorch · Linux" },
-    { label: "Open to", value: "Research collaboration · Speaking · Open-source" },
+    { label: "Open to", value: "Collaboration · Open-source" },
   ],
   projects: [
     {
@@ -54,6 +53,19 @@ export const siteContent: SiteContent = {
       tags: ["TypeScript", "Three.js", "URDF", "Robotics Tooling"],
       links: {
         code: "https://github.com/deyuf/urdf-studio",
+      },
+      year: "2025",
+      featured: true,
+    },
+    {
+      slug: "rosight",
+      title: "Rosight",
+      tagline: "A keyboard-driven TUI cockpit for ROS 2",
+      description:
+        "A terminal interface for ROS 2 — browse live message graphs, nodes, services, actions, parameters, TF frames and recorded bags, with live plotting of numeric fields. Auto-QoS negotiation, runtime domain switching, and a no-ROS dev mode. Built for SSH, tmux and headless robot consoles where the mouse isn't an option.",
+      tags: ["ROS 2", "Python", "TUI", "Robotics Tooling"],
+      links: {
+        code: "https://github.com/deyuf/rosight",
       },
       year: "2025",
       featured: true,

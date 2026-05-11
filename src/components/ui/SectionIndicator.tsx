@@ -39,7 +39,8 @@ export function SectionIndicator() {
       aria-label="Section indicator"
       className="fixed right-6 top-1/2 z-30 hidden -translate-y-1/2 lg:block"
     >
-      <ul className="flex flex-col gap-3">
+      {/* items-end right-aligns every row, so all line ends sit on the same vertical axis */}
+      <ul className="flex flex-col items-end gap-3">
         {SECTIONS.map((s) => {
           const isActive = active === s.id;
           return (
@@ -59,10 +60,9 @@ export function SectionIndicator() {
                 >
                   {s.label}
                 </span>
+                {/* Uniform width — state communicated by color only, never length */}
                 <span
-                  className={`block h-px transition-all ${
-                    isActive ? "w-8" : "w-4 group-hover:w-6"
-                  }`}
+                  className="block h-px w-6 transition-colors"
                   style={{
                     background: isActive
                       ? "var(--color-accent)"

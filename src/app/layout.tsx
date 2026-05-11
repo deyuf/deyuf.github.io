@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { siteContent } from "@/lib/content";
+import { ThemeProvider } from "@/lib/theme";
 import "./globals.css";
 
 const interTight = Inter_Tight({
@@ -40,6 +41,9 @@ export const metadata: Metadata = {
   },
 };
 
+// Runs before React hydrates to set data-theme on <html>, avoiding FOUC.
+const themeInitScript = `(function(){try{var s=localStorage.getItem('theme');var p=s||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=p;}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: {
@@ -47,7 +51,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${interTight.variable} ${jetbrainsMono.variable}`}>
-      <body>{children}</body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
       <GoogleAnalytics gaId="G-YFS4ZHWMV9" />
     </html>
   );

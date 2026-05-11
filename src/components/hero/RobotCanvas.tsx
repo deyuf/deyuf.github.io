@@ -24,12 +24,12 @@ interface ArmColors {
 }
 
 const DARK_COLORS: ArmColors = {
-  accent: "#00e0b8",
+  accent: "#e5b547",
   segment: "#1a1a1f",
   segmentMid: "#22222a",
   segmentDark: "#15151a",
   joint: "#23232a",
-  cellColor: "#1a3a35",
+  cellColor: "#3d3520",
   rimLight: "#5a8cff",
 };
 

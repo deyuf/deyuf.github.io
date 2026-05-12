@@ -13,6 +13,10 @@ interface LinkedInBadgeProps {
   vanity: string;
   size?: "medium" | "large";
   type?: "HORIZONTAL" | "VERTICAL";
+  /** Subdomain for the deep link — e.g. "www" (default) or "de" for de.linkedin.com */
+  host?: string;
+  /** Display text inside the anchor — defaults to the vanity slug */
+  label?: string;
 }
 
 /**
@@ -27,6 +31,8 @@ export function LinkedInBadge({
   vanity,
   size = "medium",
   type = "VERTICAL",
+  host = "www",
+  label,
 }: LinkedInBadgeProps) {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [mounted, setMounted] = useState(false);
@@ -69,9 +75,9 @@ export function LinkedInBadge({
       >
         <a
           className="badge-base__link LI-simple-link"
-          href={`https://www.linkedin.com/in/${vanity}?trk=profile-badge`}
+          href={`https://${host}.linkedin.com/in/${vanity}?trk=profile-badge`}
         >
-          LinkedIn profile
+          {label ?? vanity}
         </a>
       </div>
     </>

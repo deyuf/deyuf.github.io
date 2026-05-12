@@ -93,7 +93,13 @@ export function Contact() {
 
         <Reveal delay={0.25}>
           <div className="mt-14 flex justify-center">
-            <LinkedInBadge vanity="deyu-fu" size="medium" type="VERTICAL" />
+            <LinkedInBadge
+              vanity="deyu-fu"
+              size="medium"
+              type="VERTICAL"
+              host="de"
+              label="Deyu Fu"
+            />
           </div>
         </Reveal>
       </div>

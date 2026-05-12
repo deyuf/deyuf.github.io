@@ -44,6 +44,35 @@ export const metadata: Metadata = {
 // Runs before React hydrates to set data-theme on <html>, avoiding FOUC.
 const themeInitScript = `(function(){try{var s=localStorage.getItem('theme');var p=s||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=p;}catch(e){}})();`;
 
+// CSP — meta http-equiv works for everything except frame-ancestors. Allow
+// only the third-party origins this site actually depends on (GitHub raw for
+// project images, LinkedIn for the profile badge, Google for Analytics).
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://platform.linkedin.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "style-src 'self' 'unsafe-inline' https://platform.linkedin.com",
+  "img-src 'self' data: https://raw.githubusercontent.com https://media.licdn.com https://static.licdn.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "font-src 'self' data:",
+  "connect-src 'self' https://platform.linkedin.com https://www.linkedin.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com",
+  "frame-src https://platform.linkedin.com https://www.linkedin.com",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+  "upgrade-insecure-requests",
+].join("; ");
+
+const permissionsPolicy = [
+  "camera=()",
+  "microphone=()",
+  "geolocation=()",
+  "interest-cohort=()",
+  "payment=()",
+  "usb=()",
+  "magnetometer=()",
+  "gyroscope=()",
+  "accelerometer=()",
+].join(", ");
+
 export default function RootLayout({
   children,
 }: {
@@ -52,6 +81,22 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${interTight.variable} ${jetbrainsMono.variable}`}>
       <head>
+        {/* Security headers (set via meta because GitHub Pages cannot set HTTP headers) */}
+        <meta httpEquiv="Content-Security-Policy" content={csp} />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
+        <meta httpEquiv="Permissions-Policy" content={permissionsPolicy} />
+        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
+
+        {/* Warm up third-party origins the page will fetch from */}
+        <link rel="dns-prefetch" href="https://raw.githubusercontent.com" />
+        <link
+          rel="preconnect"
+          href="https://raw.githubusercontent.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://platform.linkedin.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>

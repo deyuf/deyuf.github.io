@@ -14,9 +14,8 @@ import type { SiteContent } from "./types";
 export const siteContent: SiteContent = {
     name: "Deyu Fu",
     initials: "DF",
-    // To use a real avatar, drop the image at public/avatar.png and change this
-    // value to "/avatar.png". A stylized SVG placeholder ships by default.
-    avatar: "/avatar.png",
+    // Avatar served as WebP for ~96 % smaller payload vs. the original PNG.
+    avatar: "/avatar.webp",
     eyebrow: "Robotics & AI Engineer",
     tagline:
         "I bridge the gap between the digital and physical worlds, giving AI a tangible presence.",

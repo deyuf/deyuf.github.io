@@ -429,7 +429,10 @@ export function RobotCanvas() {
 
   return (
     <Canvas
-      shadows
+      // "percentage" → THREE.PCFShadowMap. The R3F default "soft"
+      // (PCFSoftShadowMap) has been deprecated upstream and three.js
+      // auto-falls back to PCFShadowMap with a console warning.
+      shadows="percentage"
       dpr={[1, 1.6]}
       camera={{ position: [3.2, 2.0, 4.6], fov: 38 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}

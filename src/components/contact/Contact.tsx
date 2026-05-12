@@ -1,6 +1,6 @@
 "use client";
 
-import { Github, Linkedin, Mail } from "lucide-react";
+import { Github, Mail } from "lucide-react";
 import { useState } from "react";
 import { siteContent } from "@/lib/content";
 import { Reveal } from "@/components/ui/Reveal";
@@ -78,16 +78,6 @@ export function Contact() {
                 </a>
               </li>
             ))}
-            <li>
-              <a
-                href={siteContent.contact.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm transition hover:border-border-strong hover:bg-surface"
-              >
-                <Linkedin size={14} /> LinkedIn
-              </a>
-            </li>
           </ul>
         </Reveal>
 

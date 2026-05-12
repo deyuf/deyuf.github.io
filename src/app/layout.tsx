@@ -46,15 +46,19 @@ const themeInitScript = `(function(){try{var s=localStorage.getItem('theme');var
 
 // CSP — meta http-equiv works for everything except frame-ancestors. Allow
 // only the third-party origins this site actually depends on (GitHub raw for
-// project images, LinkedIn for the profile badge, Google for Analytics).
+// project images, LinkedIn for the profile badge, Google for Analytics,
+// raw.githack.com because drei's <Environment preset> fetches HDRIs from
+// the pmndrs/drei-assets repo served through that CDN — blocking it loses
+// the WebGL context).
 const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://platform.linkedin.com https://www.googletagmanager.com https://www.google-analytics.com",
   "style-src 'self' 'unsafe-inline' https://platform.linkedin.com",
-  "img-src 'self' data: https://raw.githubusercontent.com https://media.licdn.com https://static.licdn.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "img-src 'self' data: blob: https://raw.githubusercontent.com https://media.licdn.com https://static.licdn.com https://www.googletagmanager.com https://www.google-analytics.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://platform.linkedin.com https://www.linkedin.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com",
+  "connect-src 'self' https://platform.linkedin.com https://www.linkedin.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://raw.githack.com https://raw.githubusercontent.com",
   "frame-src https://platform.linkedin.com https://www.linkedin.com",
+  "worker-src 'self' blob:",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { siteContent } from "@/lib/content";
 import { Reveal } from "@/components/ui/Reveal";
 import { ScrambleText } from "@/components/ui/ScrambleText";
+import { LinkedInBadge } from "@/components/ui/LinkedInBadge";
 
 function decodeEmail() {
   if (typeof window === "undefined") return "";
@@ -88,6 +89,12 @@ export function Contact() {
               </a>
             </li>
           </ul>
+        </Reveal>
+
+        <Reveal delay={0.25}>
+          <div className="mt-14 flex justify-center">
+            <LinkedInBadge vanity="deyu-fu" size="medium" type="VERTICAL" />
+          </div>
         </Reveal>
       </div>
     </section>

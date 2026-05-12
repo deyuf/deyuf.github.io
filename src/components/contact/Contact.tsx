@@ -95,10 +95,11 @@ export function Contact() {
           <div className="mt-14 flex justify-center">
             <LinkedInBadge
               vanity="deyu-fu"
-              size="medium"
-              type="VERTICAL"
               host="de"
-              label="Deyu Fu"
+              name={siteContent.name}
+              headline={`${siteContent.eyebrow} at Agile Robots SE`}
+              location="Munich, Germany"
+              avatar={siteContent.avatar}
             />
           </div>
         </Reveal>

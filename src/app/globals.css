@@ -142,14 +142,10 @@ a {
   color: var(--color-fg-muted);
 }
 
-/* LinkedIn badge — we render both light + dark variants and toggle visibility
-   purely with CSS so we don't have to mess with re-running profile.js. */
-html[data-theme="light"] .linkedin-badge-dark,
-html:not([data-theme="dark"]):not([data-theme="light"]) .linkedin-badge-dark {
-  display: none;
-}
-html[data-theme="dark"] .linkedin-badge-light {
-  display: none;
+/* LinkedIn card hover state — the accent text color needs a readable
+   companion when the pill background flips to the accent on hover. */
+.linkedin-card:hover {
+  border-color: var(--color-border-strong);
 }
 
 /* Caret blink for hero eyebrow */

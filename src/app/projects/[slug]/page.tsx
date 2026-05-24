@@ -49,8 +49,69 @@ export default async function ProjectPage({
   const project = siteContent.projects.find((p) => p.slug === slug);
   if (!project) notFound();
 
+  // Surface academic projects (those with a paper link) as
+  // ScholarlyArticle so Google Scholar and rich results pick them up.
+  const publication = siteContent.publications.find(
+    (pub) => pub.links.code === project.links.code,
+  );
+  const scholarlyJsonLd = project.links.paper
+    ? {
+        "@context": "https://schema.org",
+        "@type": "ScholarlyArticle",
+        headline: publication?.title ?? project.title,
+        name: publication?.title ?? project.title,
+        abstract: project.tagline,
+        author: [
+          {
+            "@type": "Person",
+            name: siteContent.name,
+            url: "https://me.deyuf.org",
+          },
+        ],
+        datePublished: project.year,
+        url: project.links.paper,
+        sameAs: project.links.paper,
+        ...(publication?.venue && {
+          isPartOf: {
+            "@type": "PublicationVolume",
+            name: `${publication.venue} ${publication.year}`,
+          },
+        }),
+        ...(project.coverImage && { image: project.coverImage }),
+        keywords: project.tags.join(", "),
+      }
+    : null;
+
+  const softwareJsonLd =
+    !scholarlyJsonLd && project.links.code
+      ? {
+          "@context": "https://schema.org",
+          "@type": "SoftwareSourceCode",
+          name: project.title,
+          description: project.tagline,
+          codeRepository: project.links.code,
+          author: {
+            "@type": "Person",
+            name: siteContent.name,
+            url: "https://me.deyuf.org",
+          },
+          dateCreated: project.year,
+          programmingLanguage: project.tags.join(", "),
+          ...(project.coverImage && { image: project.coverImage }),
+          ...(project.links.demo && { url: project.links.demo }),
+        }
+      : null;
+
+  const projectJsonLd = scholarlyJsonLd ?? softwareJsonLd;
+
   return (
     <>
+      {projectJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(projectJsonLd) }}
+        />
+      )}
       <NoiseOverlay />
       <Nav />
       <main className="relative pt-32 pb-24">

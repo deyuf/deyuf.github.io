@@ -1,0 +1,25 @@
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://platform.linkedin.com https://badges.linkedin.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://platform.linkedin.com; img-src 'self' data: blob: https://raw.githubusercontent.com https://*.licdn.com; font-src 'self' data:; connect-src 'self' https://platform.linkedin.com https://www.linkedin.com https://badges.linkedin.com https://raw.githack.com https://raw.githubusercontent.com https://cloudflareinsights.com; frame-src https://platform.linkedin.com https://www.linkedin.com; frame-ancestors 'none'; worker-src 'self' blob:; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+  Cross-Origin-Opener-Policy: same-origin
+
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/opengraph-image
+  Content-Type: image/png
+  Cache-Control: public, max-age=86400
+
+/twitter-image
+  Content-Type: image/png
+  Cache-Control: public, max-age=86400
+
+/avatar.webp
+  Cache-Control: public, max-age=31536000, immutable
+
+/favicon.svg
+  Cache-Control: public, max-age=31536000, immutable

@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://me.deyuf.org/sitemap.xml

@@ -145,6 +145,7 @@ export const siteContent: SiteContent = {
                 code: "https://github.com/deyuf/urdf-studio",
                 marketplace:
                     "https://marketplace.visualstudio.com/items?itemName=deyuf.urdf-studio",
+                demo: "https://urdf.deyuf.org",
             },
             year: "2025",
             featured: true,
@@ -208,6 +209,41 @@ export const siteContent: SiteContent = {
                 pypi: "https://pypi.org/project/rosight/",
             },
             year: "2025",
+            featured: true,
+        },
+        {
+            slug: "history-of-robotics",
+            title: "History of Robotics",
+            tagline:
+                "A bilingual editorial chronicle — from Greek myth to embodied AI",
+            description:
+                "An interactive, bilingual (English / Chinese) timeline of robotics — 81 milestones across eight eras from 1500 BCE to today, plus a humanoid edition tracking fifty years of two-legged, two-armed machines from WABOT-1 to Atlas, Figure and Optimus.",
+            longDescription: [
+                "History of Robotics is an editorial site that treats the field as a continuous story rather than a list of products. The main chronicle walks through 81 milestones — from Greek automata and Edo-period karakuri puppets, through Unimate and SCARA, to ASIMO, Boston Dynamics' Atlas, and the current wave of general-purpose humanoids — each anchored to primary sources.",
+                "A companion Humanoid Edition focuses on the last fifty years of bipedal manipulation: WABOT-1, Honda P-series, ASIMO, HRP, Atlas, Digit, Optimus, Figure 01/02, GR-1, Apollo. Six-machine side-by-side comparisons surface specs, philosophy and inheritance lines between programs. English by default, Chinese one click away.",
+            ],
+            features: [
+                "81 milestones across eight eras (1500 BCE → 2026)",
+                "Humanoid Edition — fifty years of bipedal robots",
+                "Bilingual content (English ⇄ Chinese, one-click toggle)",
+                "Every event anchored to a primary source",
+                "Six-machine side-by-side humanoid comparison",
+                "Hand-tuned editorial, not auto-generated",
+            ],
+            meta: [
+                { label: "Year", value: "2026" },
+                { label: "Platform", value: "Static web (browser)" },
+                { label: "Stack", value: "JavaScript · CSS · HTML · Python (build)" },
+                { label: "License", value: "CC BY 4.0" },
+            ],
+            coverImage:
+                "https://raw.githubusercontent.com/deyuf/history-of-robotics/main/assets/og.svg",
+            tags: ["Editorial", "Bilingual", "Web", "Robotics History"],
+            links: {
+                code: "https://github.com/deyuf/history-of-robotics",
+                demo: "https://historyofrobotics.deyuf.org",
+            },
+            year: "2026",
             featured: true,
         },
     ],

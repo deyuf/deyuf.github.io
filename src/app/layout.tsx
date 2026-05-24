@@ -72,6 +72,14 @@ export const metadata: Metadata = {
 // Runs before React hydrates to set data-theme on <html>, avoiding FOUC.
 const themeInitScript = `(function(){try{var s=localStorage.getItem('theme');var p=s||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=p;}catch(e){}})();`;
 
+// Hard-redirect the legacy GitHub Pages host to the canonical custom
+// domain. Runs synchronously in <head> so the user never sees the wrong
+// URL render. Search engine consolidation is handled separately by the
+// canonical <link>.
+const canonicalRedirectScript = `(function(){try{if(location.hostname==='deyuf.github.io'){location.replace('https://me.deyuf.org'+location.pathname+location.search+location.hash);}}catch(e){}})();`;
+
+const cfBeaconToken = process.env.NEXT_PUBLIC_CF_BEACON_TOKEN;
+
 // JSON-LD structured data so search engines can render a rich Person card.
 const personJsonLd = {
   "@context": "https://schema.org",
@@ -113,11 +121,11 @@ const personJsonLd = {
 // - Google for Analytics.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://platform.linkedin.com https://badges.linkedin.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "script-src 'self' 'unsafe-inline' https://platform.linkedin.com https://badges.linkedin.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline' https://platform.linkedin.com",
   "img-src 'self' data: blob: https://raw.githubusercontent.com https://*.licdn.com https://www.googletagmanager.com https://www.google-analytics.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://platform.linkedin.com https://www.linkedin.com https://badges.linkedin.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://raw.githack.com https://raw.githubusercontent.com",
+  "connect-src 'self' https://platform.linkedin.com https://www.linkedin.com https://badges.linkedin.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://raw.githack.com https://raw.githubusercontent.com https://cloudflareinsights.com",
   "frame-src https://platform.linkedin.com https://www.linkedin.com",
   "worker-src 'self' blob:",
   "base-uri 'self'",
@@ -162,6 +170,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://platform.linkedin.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 
+        <script
+          dangerouslySetInnerHTML={{ __html: canonicalRedirectScript }}
+        />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <script
           type="application/ld+json"
@@ -172,6 +183,13 @@ export default function RootLayout({
         <ThemeProvider>{children}</ThemeProvider>
       </body>
       <GoogleAnalytics gaId="G-YFS4ZHWMV9" />
+      {cfBeaconToken && (
+        <script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: cfBeaconToken })}
+        />
+      )}
     </html>
   );
 }

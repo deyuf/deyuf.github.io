@@ -37,6 +37,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build (static export)
+        env:
+          NEXT_PUBLIC_CF_BEACON_TOKEN: ${{ secrets.CF_BEACON_TOKEN }}
         run: pnpm build
 
       - name: Deploy to Cloudflare Pages

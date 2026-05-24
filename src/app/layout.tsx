@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter_Tight, JetBrains_Mono } from "next/font/google";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import { siteContent } from "@/lib/content";
 import { ThemeProvider } from "@/lib/theme";
 import "./globals.css";
@@ -118,14 +117,14 @@ const personJsonLd = {
 //   badges.linkedin.com (the second-stage script that profile.js
 //   dynamically loads to render the badge content) + *.licdn.com for
 //   the avatar / branding assets the badge embeds
-// - Google for Analytics.
+// - Cloudflare Web Analytics beacon.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://platform.linkedin.com https://badges.linkedin.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com",
+  "script-src 'self' 'unsafe-inline' https://platform.linkedin.com https://badges.linkedin.com https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline' https://platform.linkedin.com",
-  "img-src 'self' data: blob: https://raw.githubusercontent.com https://*.licdn.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "img-src 'self' data: blob: https://raw.githubusercontent.com https://*.licdn.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://platform.linkedin.com https://www.linkedin.com https://badges.linkedin.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://raw.githack.com https://raw.githubusercontent.com https://cloudflareinsights.com",
+  "connect-src 'self' https://platform.linkedin.com https://www.linkedin.com https://badges.linkedin.com https://raw.githack.com https://raw.githubusercontent.com https://cloudflareinsights.com",
   "frame-src https://platform.linkedin.com https://www.linkedin.com",
   "worker-src 'self' blob:",
   "base-uri 'self'",
@@ -168,7 +167,6 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link rel="dns-prefetch" href="https://platform.linkedin.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 
         <script
           dangerouslySetInnerHTML={{ __html: canonicalRedirectScript }}
@@ -182,7 +180,6 @@ export default function RootLayout({
       <body>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
-      <GoogleAnalytics gaId="G-YFS4ZHWMV9" />
       {cfBeaconToken && (
         <script
           defer

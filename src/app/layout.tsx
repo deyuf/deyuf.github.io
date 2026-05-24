@@ -18,23 +18,51 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://deyuf.github.io"),
+  metadataBase: new URL("https://me.deyuf.org"),
   title: {
     default: `${siteContent.name} — ${siteContent.eyebrow}`,
     template: `%s — ${siteContent.name}`,
   },
   description: siteContent.tagline,
+  keywords: [
+    "Deyu Fu",
+    "Robotics Engineer",
+    "AI Engineer",
+    "Reinforcement Learning",
+    "Dexterous Manipulation",
+    "Sim2Real",
+    "Humanoid Robotics",
+    "ROS 2",
+    "Munich",
+  ],
+  authors: [{ name: siteContent.name, url: "https://me.deyuf.org" }],
+  creator: siteContent.name,
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: `${siteContent.name} — ${siteContent.eyebrow}`,
     description: siteContent.tagline,
-    url: "https://deyuf.github.io",
+    url: "https://me.deyuf.org",
     siteName: siteContent.name,
     type: "website",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: `${siteContent.name} — ${siteContent.eyebrow}`,
     description: siteContent.tagline,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
   icons: {
     icon: "/favicon.svg",
@@ -43,6 +71,37 @@ export const metadata: Metadata = {
 
 // Runs before React hydrates to set data-theme on <html>, avoiding FOUC.
 const themeInitScript = `(function(){try{var s=localStorage.getItem('theme');var p=s||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=p;}catch(e){}})();`;
+
+// JSON-LD structured data so search engines can render a rich Person card.
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: siteContent.name,
+  url: "https://me.deyuf.org",
+  image: "https://me.deyuf.org/avatar.webp",
+  jobTitle: siteContent.eyebrow,
+  description: siteContent.tagline,
+  worksFor: { "@type": "Organization", name: "Agile Robots SE" },
+  alumniOf: [
+    { "@type": "CollegeOrUniversity", name: "Technical University of Munich" },
+    { "@type": "CollegeOrUniversity", name: "Tongji University" },
+  ],
+  knowsAbout: [
+    "Robotics",
+    "Reinforcement Learning",
+    "Dexterous Manipulation",
+    "Sim2Real",
+    "Physical Simulation",
+    "Computer Vision",
+  ],
+  sameAs: [
+    "https://github.com/deyuf",
+    siteContent.contact.linkedin,
+    "https://deyuf.github.io",
+    "https://urdf.deyuf.org",
+    "https://historyofrobotics.deyuf.org",
+  ],
+};
 
 // CSP — meta http-equiv works for everything except frame-ancestors. Allow
 // only the third-party origins this site actually depends on:
@@ -104,6 +163,10 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>

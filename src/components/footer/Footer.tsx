@@ -8,6 +8,11 @@ export function Footer() {
         <p className="font-mono text-xs uppercase tracking-widest muted">
           © {year} {siteContent.name}. All rights reserved.
         </p>
+        <nav aria-label="Deyu Fu websites" className="flex flex-wrap gap-4 text-sm">
+          <a href="https://me.deyuf.org/">Personal site</a>
+          <a href="https://urdf.deyuf.org/">URDF Studio</a>
+          <a href="https://historyofrobotics.deyuf.org/">History of Robotics</a>
+        </nav>
         <p className="font-mono text-xs uppercase tracking-widest muted">
           Built with Next.js · {" "}
           <a

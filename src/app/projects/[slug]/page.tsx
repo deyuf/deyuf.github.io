@@ -32,7 +32,9 @@ export async function generateMetadata({
   return {
     title: `${project.title} — ${siteContent.name}`,
     description: project.tagline,
+    alternates: { canonical: `/projects/${project.slug}/` },
     openGraph: {
+      url: `https://me.deyuf.org/projects/${project.slug}/`,
       title: `${project.title} — ${siteContent.name}`,
       description: project.tagline,
       images: project.coverImage ? [project.coverImage] : undefined,

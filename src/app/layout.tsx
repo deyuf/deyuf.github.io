@@ -120,7 +120,7 @@ const personJsonLd = {
 // - Cloudflare Web Analytics beacon.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://platform.linkedin.com https://badges.linkedin.com https://static.cloudflareinsights.com",
+  `script-src 'self' 'unsafe-inline' https://platform.linkedin.com https://badges.linkedin.com https://static.cloudflareinsights.com${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://platform.linkedin.com",
   "img-src 'self' data: blob: https://raw.githubusercontent.com https://*.licdn.com",
   "font-src 'self' data:",

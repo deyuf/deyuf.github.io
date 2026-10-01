@@ -4,6 +4,8 @@ import { motion, useScroll, useTransform } from "motion/react";
 import { siteContent } from "@/lib/content";
 import { useTheme } from "@/lib/theme";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 const LINKS = [
   { id: "about", label: "About" },
@@ -14,6 +16,9 @@ const LINKS = [
 ];
 
 export function Nav() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const sectionHref = (id: string) => `${pathname === "/" ? "" : "/"}#${id}`;
   const { theme } = useTheme();
   const { scrollY } = useScroll();
   const backdropFilter = useTransform(
@@ -49,7 +54,7 @@ export function Nav() {
       className="fixed inset-x-0 top-0 z-40"
     >
       <nav className="mx-auto flex max-w-[1280px] items-center justify-between px-5 py-4 md:px-12">
-        <a href="#hero" className="flex items-center gap-2.5 font-mono text-sm">
+        <a href={sectionHref("hero")} className="flex items-center gap-2.5 font-mono text-sm">
           {siteContent.avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -73,7 +78,7 @@ export function Nav() {
           {LINKS.map((l) => (
             <li key={l.id}>
               <a
-                href={`#${l.id}`}
+                href={sectionHref(l.id)}
                 className="transition-colors hover:text-fg"
                 style={{ color: "var(--color-fg-muted)" }}
               >
@@ -84,6 +89,15 @@ export function Nav() {
         </ul>
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <button
+            type="button"
+            className="rounded-full border border-border px-3 py-1.5 text-sm md:hidden"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? "Close menu" : "Menu"}
+          </button>
           <a
             href={siteContent.contact.linkedin}
             target="_blank"
@@ -94,6 +108,17 @@ export function Nav() {
           </a>
         </div>
       </nav>
+      {menuOpen && (
+        <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-border bg-bg px-5 py-4 md:hidden">
+          <ul className="flex flex-wrap gap-x-6 gap-y-4">
+            {LINKS.map((link) => (
+              <li key={link.id}>
+                <a href={sectionHref(link.id)} onClick={() => setMenuOpen(false)}>{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </motion.header>
   );
 }

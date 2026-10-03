@@ -37,7 +37,7 @@ export function SectionIndicator() {
   return (
     <nav
       aria-label="Section indicator"
-      className="fixed right-6 top-1/2 z-30 hidden -translate-y-1/2 lg:block"
+      className="fixed right-6 top-1/2 z-30 hidden -translate-y-1/2 xl:block"
     >
       {/* items-end right-aligns every row, so all line ends sit on the same vertical axis */}
       <ul className="flex flex-col items-end gap-3">

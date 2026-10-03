@@ -58,7 +58,7 @@ export const siteContent: SiteContent = {
                 { label: "Role", value: "Lead author · M.Sc. thesis derivative" },
             ],
             coverImage:
-                "https://raw.githubusercontent.com/deyuf/WARM-3D/main/Asset/TUMTraff-Synthetic.png",
+                "/projects/warm-3d.png",
             gallery: [
                 {
                     src: "https://raw.githubusercontent.com/deyuf/WARM-3D/main/Asset/TUMTraff-Synthetic.png",
@@ -125,7 +125,7 @@ export const siteContent: SiteContent = {
                 { label: "License", value: "MIT" },
             ],
             coverImage:
-                "https://raw.githubusercontent.com/deyuf/urdf-studio/main/media/screenshots/viewer-joints.png",
+                "/projects/urdf-studio.png",
             gallery: [
                 {
                     src: "https://raw.githubusercontent.com/deyuf/urdf-studio/main/media/screenshots/viewer-joints.png",
@@ -180,7 +180,7 @@ export const siteContent: SiteContent = {
                 { label: "License", value: "MIT" },
             ],
             coverImage:
-                "https://raw.githubusercontent.com/deyuf/rosight/main/docs/screenshots/01-messages.png",
+                "/projects/rosight.png",
             gallery: [
                 {
                     src: "https://raw.githubusercontent.com/deyuf/rosight/main/docs/screenshots/01-messages.png",
@@ -237,7 +237,7 @@ export const siteContent: SiteContent = {
                 { label: "License", value: "CC BY 4.0" },
             ],
             coverImage:
-                "https://raw.githubusercontent.com/deyuf/history-of-robotics/main/assets/og.svg",
+                "/projects/history-of-robotics.svg",
             tags: ["Editorial", "Bilingual", "Web", "Robotics History"],
             links: {
                 code: "https://github.com/deyuf/history-of-robotics",

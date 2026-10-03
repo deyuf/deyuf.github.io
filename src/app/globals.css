@@ -130,7 +130,7 @@ a {
 .section {
   position: relative;
   padding: clamp(80px, 12vw, 160px) clamp(20px, 5vw, 64px);
-  max-width: 1280px;
+  max-width: 1440px;
   margin: 0 auto;
 }
 
@@ -214,3 +214,114 @@ a {
 /* Hide scrollbar in nice places */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Spacious editorial hero, with an actual six-axis CAD manipulator. */
+.hero-stage {
+  position: relative;
+  isolation: isolate;
+  min-height: max(860px, 100svh);
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-border);
+}
+.hero-atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse at 76% 43%, rgba(106, 132, 155, 0.12), transparent 46%),
+    linear-gradient(125deg, transparent 45%, rgba(123, 144, 163, 0.035));
+}
+.hero-layout {
+  width: min(100%, 1600px);
+  min-height: max(780px, calc(100svh - 80px));
+  margin: 0 auto;
+  padding: 112px clamp(24px, 5.5vw, 96px) 48px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  align-items: center;
+}
+.hero-copy { min-width: 0; position: relative; z-index: 2; padding-bottom: 30px; }
+.hero-kicker {
+  display: flex; align-items: center; gap: 12px;
+  font: 10px var(--font-mono); letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--color-fg-muted); margin-bottom: 36px;
+}
+.hero-status-dot { width: 5px; height: 5px; background: var(--color-accent); border-radius: 50%; }
+.hero-title {
+  font-size: clamp(68px, 7.5vw, 116px);
+  font-weight: 450; line-height: 0.99; letter-spacing: -0.065em;
+  margin-left: -0.055em;
+}
+.hero-title > span:not(.sr-only) { display: block; }
+.hero-title-second { color: var(--color-fg-muted); }
+.hero-description { max-width: 400px; margin-top: 32px; font-size: 17px; line-height: 1.8; color: var(--color-fg-muted); }
+.hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 28px; margin-top: 32px; }
+.hero-secondary-link { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--color-fg-muted); transition: color 200ms; }
+.hero-secondary-link:hover { color: var(--color-fg); }
+.hero-signature { display: flex; align-items: center; gap: 14px; margin-top: 44px; font: 10px var(--font-mono); color: var(--color-fg-faint); }
+.hero-signature > span:first-child { color: var(--color-fg-muted); }
+.hero-signature-rule { height: 1px; width: 24px; background: var(--color-border-strong); }
+.hero-visual { min-width: 0; position: relative; height: clamp(600px, 55vw, 820px); width: calc(100% + 120px); margin-left: -55px; color: var(--color-fg-muted); }
+.hero-orbit {
+  position: absolute; pointer-events: none;
+  width: 82%; aspect-ratio: 1; top: 13%; left: 9%;
+  border: 1px solid var(--color-border); border-radius: 50%; opacity: 0.5;
+}
+.hero-orbit::after { content: ""; position: absolute; inset: 15%; border: 1px solid var(--color-border); border-radius: 50%; }
+.hero-model-label { position: absolute; top: 10%; left: 12%; display: flex; align-items: center; gap: 10px; font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: 0.13em; color: var(--color-fg-faint); }
+.hero-label-rule { height: 1px; width: 20px; background: var(--color-accent); opacity: 0.6; }
+.hero-model-footer { position: absolute; bottom: 9%; left: 12%; right: 10%; display: flex; justify-content: space-between; gap: 16px; font: 9px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-fg-faint); }
+.hero-model-footer > span:last-child { display: flex; align-items: center; gap: 8px; }
+.hero-label-divider { padding: 0 9px; opacity: 0.4; }
+.hero-bottom-bar { position: relative; width: min(100% - clamp(48px, 11vw, 192px), 1408px); margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 25px 0; border-top: 1px solid var(--color-border); font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: 0.13em; color: var(--color-fg-faint); }
+.hero-scroll-link { display: flex; align-items: center; gap: 10px; transition: color 200ms; }
+.hero-scroll-link:hover { color: var(--color-fg); }
+.hero-disciplines { display: flex; gap: 36px; }
+.hero-disciplines span + span::before { content: "/"; margin-right: 36px; opacity: 0.3; }
+html[data-theme="light"] .hero-atmosphere { background: radial-gradient(ellipse at 76% 43%, rgba(136, 150, 158, 0.16), transparent 48%); }
+@media (min-width: 1800px) { .hero-layout { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); } }
+@media (max-width: 1100px) {
+  .hero-title { font-size: clamp(64px, 8vw, 88px); }
+  .hero-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding-inline: 40px; }
+  .hero-visual { width: calc(100% + 90px); margin-left: -35px; }
+  .hero-description { max-width: 340px; font-size: 16px; }
+  .hero-edition { display: none; }
+}
+@media (max-width: 900px) {
+  .hero-stage { min-height: auto; }
+  .hero-layout { min-height: auto; padding: 140px 24px 0; grid-template-columns: minmax(0, 1fr); }
+  .hero-copy { padding: 0; }
+  .hero-kicker { font-size: 9px; margin-bottom: 28px; }
+  .hero-title { font-size: clamp(54px, 12.9vw, 96px); }
+  .hero-description { max-width: 420px; margin-top: 24px; font-size: 15px; line-height: 1.8; }
+  .hero-actions { gap: 24px; margin-top: 26px; }
+  .hero-signature { margin-top: 30px; }
+  .hero-visual { width: calc(100% + 48px); height: clamp(430px, 115vw, 700px); margin: 16px -24px 0; }
+  .hero-model-label { top: 8%; left: 8%; font-size: 8px; }
+  .hero-model-footer { bottom: 5%; left: 8%; right: 8%; font-size: 8px; }
+  .hero-bottom-bar { width: calc(100% - 48px); padding: 22px 0; margin-top: 12px; }
+  .hero-disciplines { display: none; }
+}
+
+.project-showcase-media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+}
+.project-showcase-index {
+  position: absolute; top: 18px; left: 18px;
+  padding: 5px 8px; font: 9px var(--font-mono); letter-spacing: 0.1em;
+  color: #f4f4f4; background: rgba(12, 16, 20, 0.6); backdrop-filter: blur(8px);
+}
+.project-showcase-arrow {
+  position: absolute; right: 18px; bottom: 18px;
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  color: #f4f4f4; background: rgba(12, 16, 20, 0.6); backdrop-filter: blur(8px);
+  transition: background 200ms, transform 200ms;
+}
+.group:hover .project-showcase-arrow { background: rgba(12, 16, 20, 0.9); transform: translate(2px, -2px); }

@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
-import { Inter_Tight, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { siteContent } from "@/lib/content";
 import { ThemeProvider } from "@/lib/theme";
 import "./globals.css";
 
-const interTight = Inter_Tight({
-  subsets: ["latin"],
+const interTight = localFont({
+  src: "../../public/fonts/inter-tight-latin.woff2",
+  weight: "100 900",
   variable: "--font-inter-tight",
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
+const jetbrainsMono = localFont({
+  src: "../../public/fonts/jetbrains-mono-latin.woff2",
+  weight: "100 800",
   variable: "--font-jetbrains-mono",
   display: "swap",
 });
@@ -151,7 +153,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${interTight.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${interTight.variable} ${jetbrainsMono.variable}`}>
       <head>
         {/* Security headers (set via meta because GitHub Pages cannot set HTTP headers) */}
         <meta httpEquiv="Content-Security-Policy" content={csp} />

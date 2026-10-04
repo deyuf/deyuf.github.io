@@ -48,6 +48,15 @@ data, so re-skinning the site for a different person is one file. Types are in
 
 ## Deploy
 
+Every branch push triggers
+[`.github/workflows/cloudflare-pages.yml`](./.github/workflows/cloudflare-pages.yml).
+Cloudflare Pages uses `main` for production at https://me.deyuf.org; other
+branches deploy to isolated preview URLs. Open the deployment link in the
+GitHub Actions run summary or the `cloudflare-pages` environment to test a
+branch before merging. The workflow can also be run manually for a selected
+branch. Deployments are queued separately per branch, and newer preview pushes
+cancel older runs for that branch.
+
 Pushes to `main` trigger
 [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml), which runs
 `pnpm install --frozen-lockfile && pnpm build` and uploads `out/` as a Pages

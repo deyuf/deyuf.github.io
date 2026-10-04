@@ -1,453 +1,291 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import {
-  ContactShadows,
-  Environment,
-  Float,
-  Grid,
-  Sparkles,
-} from "@react-three/drei";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { useRef, useEffect, useMemo, useState } from "react";
-import type { Group, Vector3 } from "three";
+import { ContactShadows, Environment, Lightformer, RoundedBox, useGLTF } from "@react-three/drei";
+import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import * as THREE from "three";
 
-interface ArmColors {
-  accent: string;
-  segment: string;
-  segmentMid: string;
-  segmentDark: string;
-  joint: string;
-  cellColor: string;
-  rimLight: string;
+const MODEL = "/models/ur5/ur5.glb";
+const PI = Math.PI;
+
+// UR5's six revolute axes, in the manufacturer's ROS coordinate system.
+// The visual transforms and offsets match the original CAD/URDF definitions.
+const JOINTS = [
+  { name: "shoulder", xyz: [0, 0, 0.089159], rpy: [0, 0, 0], pose: 0.25 },
+  { name: "upperarm", xyz: [0, 0, 0], rpy: [PI / 2, 0, 0], pose: -1.95 },
+  { name: "forearm", xyz: [-0.425, 0, 0], rpy: [0, 0, 0], pose: 2.3 },
+  { name: "wrist1", xyz: [-0.39225, 0, 0.10915], rpy: [0, 0, 0], pose: -0.95 },
+  { name: "wrist2", xyz: [0, -0.09465, 0], rpy: [PI / 2, 0, 0], pose: -1.1 },
+  { name: "wrist3", xyz: [0, 0.0823, 0], rpy: [PI / 2, PI, PI], pose: 0.35 },
+] as const;
+
+const VISUALS: Record<string, { xyz: [number, number, number]; rpy: [number, number, number] }> = {
+  base: { xyz: [0, 0, 0], rpy: [0, 0, PI] },
+  shoulder: { xyz: [0, 0, 0], rpy: [0, 0, PI] },
+  upperarm: { xyz: [0, 0, 0.13585], rpy: [PI / 2, 0, -PI / 2] },
+  forearm: { xyz: [0, 0, 0.0165], rpy: [PI / 2, 0, -PI / 2] },
+  wrist1: { xyz: [0, 0, -0.093], rpy: [PI / 2, 0, 0] },
+  wrist2: { xyz: [0, 0, -0.095], rpy: [0, 0, 0] },
+  wrist3: { xyz: [0, 0, -0.0818], rpy: [PI / 2, 0, 0] },
+};
+
+function rotation(rpy: readonly number[]) {
+  return new THREE.Euler(rpy[0], rpy[1], rpy[2], "ZYX");
 }
 
-const DARK_COLORS: ArmColors = {
-  accent: "#e5b547",
-  segment: "#1a1a1f",
-  segmentMid: "#22222a",
-  segmentDark: "#15151a",
-  joint: "#23232a",
-  cellColor: "#3d3520",
-  rimLight: "#5a8cff",
-};
-
-const LIGHT_COLORS: ArmColors = {
-  accent: "#c96442",
-  segment: "#3a342c",
-  segmentMid: "#2e2a23",
-  segmentDark: "#221f1a",
-  joint: "#403a32",
-  cellColor: "#a89478",
-  rimLight: "#e8a877",
-};
-
-function useArmColors(): ArmColors {
-  const [colors, setColors] = useState<ArmColors>(DARK_COLORS);
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
   useEffect(() => {
-    const read = () => {
-      const isLight = document.documentElement.dataset.theme === "light";
-      setColors(isLight ? LIGHT_COLORS : DARK_COLORS);
-    };
-    read();
-    window.addEventListener("themechange", read);
-    return () => window.removeEventListener("themechange", read);
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
   }, []);
-  return colors;
+  return reduced;
 }
 
-const L_UPPER = 0.85; // shoulder → elbow
-const L_LOWER = 0.7; // elbow → wrist1
-const TAIL = 0.45 + 0.34; // wrist1 → tip (forearm + gripper offset)
-
-function ArmSegment({
-  length,
-  radius = 0.12,
-  colors,
-}: {
-  length: number;
-  radius?: number;
-  colors: ArmColors;
-}) {
-  return (
-    <mesh position={[0, length / 2, 0]} castShadow>
-      <cylinderGeometry args={[radius * 0.85, radius, length, 32]} />
-      <meshPhysicalMaterial
-        color={colors.segment}
-        metalness={0.85}
-        roughness={0.32}
-        clearcoat={0.55}
-        clearcoatRoughness={0.25}
-      />
-    </mesh>
-  );
+function useLightTheme() {
+  const [light, setLight] = useState(false);
+  useEffect(() => {
+    const update = () => setLight(document.documentElement.dataset.theme === "light");
+    update();
+    window.addEventListener("themechange", update);
+    return () => window.removeEventListener("themechange", update);
+  }, []);
+  return light;
 }
 
-function NeutralJoint({
-  size = 0.16,
-  colors,
-}: {
-  size?: number;
-  colors: ArmColors;
-}) {
-  return (
-    <mesh castShadow>
-      <sphereGeometry args={[size, 32, 32]} />
-      <meshPhysicalMaterial
-        color={colors.joint}
-        metalness={0.9}
-        roughness={0.22}
-        clearcoat={0.5}
-      />
-    </mesh>
-  );
-}
-
-function Gripper({ colors }: { colors: ArmColors }) {
+function Tool() {
   return (
     <group>
-      <NeutralJoint size={0.15} colors={colors} />
-      <mesh position={[0, 0.08, 0]} castShadow>
-        <cylinderGeometry args={[0.13, 0.11, 0.06, 24]} />
-        <meshPhysicalMaterial
-          color={colors.segmentMid}
-          metalness={0.9}
-          roughness={0.25}
-          clearcoat={0.5}
-        />
+      <mesh position={[0, 0, 0.018]} rotation={[PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.032, 0.032, 0.035, 48]} />
+        <meshStandardMaterial color="#8e979c" metalness={1} roughness={0.28} />
       </mesh>
-      <mesh position={[0.07, 0.2, 0]} castShadow>
-        <boxGeometry args={[0.04, 0.22, 0.12]} />
-        <meshPhysicalMaterial
-          color={colors.segmentDark}
-          metalness={0.85}
-          roughness={0.28}
-          clearcoat={0.4}
-        />
-      </mesh>
-      <mesh position={[-0.07, 0.2, 0]} castShadow>
-        <boxGeometry args={[0.04, 0.22, 0.12]} />
-        <meshPhysicalMaterial
-          color={colors.segmentDark}
-          metalness={0.85}
-          roughness={0.28}
-          clearcoat={0.4}
-        />
-      </mesh>
-      <mesh position={[0, 0.34, 0]}>
-        <sphereGeometry args={[0.028, 16, 16]} />
-        <meshStandardMaterial
-          color={colors.accent}
-          emissive={colors.accent}
-          emissiveIntensity={3.2}
-          toneMapped={false}
-        />
-      </mesh>
+      <RoundedBox args={[0.095, 0.06, 0.055]} radius={0.005} smoothness={2}
+        position={[0, 0, 0.055]} castShadow>
+        <meshStandardMaterial color="#343d44" metalness={0.9} roughness={0.32} />
+      </RoundedBox>
+      {[-1, 1].map((side) => (
+        <group key={side}>
+          <mesh position={[side * 0.035, 0, 0.105]} castShadow>
+            <boxGeometry args={[0.013, 0.038, 0.07]} />
+            <meshStandardMaterial color="#a5acb0" metalness={1} roughness={0.3} />
+          </mesh>
+          <mesh position={[side * 0.027, 0, 0.143]} castShadow>
+            <boxGeometry args={[0.025, 0.038, 0.013]} />
+            <meshStandardMaterial color="#161c20" roughness={0.72} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
 
-function clampMag(v: number, max: number) {
-  return Math.max(-max, Math.min(max, v));
-}
+function Robot({ reduced, light, onReady }: { reduced: boolean; light: boolean; onReady: () => void }) {
+  // The indexed GLB uses no compression extensions, so no WASM decoders
+  // or third-party decoder downloads are needed under the site’s CSP.
+  const { scene } = useGLTF(MODEL, false, false);
+  const { gl } = useThree();
+  useEffect(() => {
+    const frame = requestAnimationFrame(onReady);
+    return () => cancelAnimationFrame(frame);
+  }, [onReady]);
+  const axisRefs = useRef<(THREE.Group | null)[]>([]);
+  const pointer = useRef(new THREE.Vector2());
+  const hovered = useRef(false);
+  const smoothPointer = useRef(new THREE.Vector2());
+  const neutralPointer = useMemo(() => new THREE.Vector2(), []);
+  const brushedSurface = useMemo(() => {
+    const size = 128;
+    const bytes = new Uint8Array(size * size * 4);
+    for (let y = 0; y < size; y++) {
+      const seed = Math.sin(y * 12.9898) * 43758.5453;
+      const grain = seed - Math.floor(seed);
+      for (let x = 0; x < size; x++) {
+        const offset = (y * size + x) * 4;
+        const value = 190 + Math.round(grain * 45 + Math.sin(x * 0.4) * 3);
+        bytes[offset] = bytes[offset + 1] = bytes[offset + 2] = value;
+        bytes[offset + 3] = 255;
+      }
+    }
+    const texture = new THREE.DataTexture(bytes, size, size);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.generateMipmaps = true;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    return texture;
+  }, []);
+  useEffect(() => () => brushedSurface.dispose(), [brushedSurface]);
 
-function Arm({
-  targetWorld,
-  colors,
-}: {
-  targetWorld: React.MutableRefObject<Vector3>;
-  colors: ArmColors;
-}) {
-  const root = useRef<Group>(null);
-  const j1 = useRef<Group>(null);
-  const j2 = useRef<Group>(null);
-  const j3 = useRef<Group>(null);
-  const j4 = useRef<Group>(null);
+  // Share geometry from the GLB cache, but own and dispose the presentation
+  // materials. CAD seams, mounting holes and vertex normals remain intact.
+  const { links, materials } = useMemo(() => {
+    const materials = new Map<string, THREE.MeshPhysicalMaterial>();
+    const links: Record<string, THREE.Object3D> = {};
+    for (const name of ["base", ...JOINTS.map((joint) => joint.name)]) {
+      const source = scene.getObjectByName(name);
+      if (!source) throw new Error(`Missing UR5 CAD link: ${name}`);
+      const link = source.clone(true);
+      link.traverse((object) => {
+        if (!(object instanceof THREE.Mesh)) return;
+        const original = object.material as THREE.Material;
+        const materialName = original.name;
+        if (!materials.has(materialName)) {
+          const aluminum = materialName === "satinAluminum";
+          const graphite = materialName === "anodizedGraphite";
+          materials.set(materialName, new THREE.MeshPhysicalMaterial({
+            name: materialName,
+            color: aluminum ? "#a4acb3" : graphite ? "#454e57" : materialName === "machinedSteel" ? "#849099" : "#171d23",
+            metalness: 1,
+            roughness: aluminum ? 0.44 : graphite ? 0.48 : 0.36,
+            roughnessMap: aluminum ? brushedSurface : null,
+            anisotropy: 0,
+            clearcoat: 0,
+            envMapIntensity: light ? 1 : 1.2,
+          }));
+        }
+        object.material = materials.get(materialName)!;
+        object.castShadow = true;
+        object.receiveShadow = true;
+      });
+      links[name] = link;
+    }
+    return { links, materials };
+  }, [scene, light, brushedSurface]);
 
-  const SHOULDER_Y = 0.32;
+  useEffect(() => () => materials.forEach((material) => material.dispose()), [materials]);
 
-  useFrame((_, delta) => {
-    if (!root.current) return;
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const move = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
+      const rect = canvas.getBoundingClientRect();
+      pointer.current.set(
+        THREE.MathUtils.clamp((event.clientX - rect.left) / rect.width * 2 - 1, -1, 1),
+        THREE.MathUtils.clamp(1 - (event.clientY - rect.top) / rect.height * 2, -1, 1)
+      );
+      hovered.current = true;
+    };
+    const leave = () => { hovered.current = false; };
+    canvas.addEventListener("pointermove", move);
+    canvas.addEventListener("pointerleave", leave);
+    return () => {
+      canvas.removeEventListener("pointermove", move);
+      canvas.removeEventListener("pointerleave", leave);
+    };
+  }, [gl]);
+
+  useFrame((state, delta) => {
+    if (reduced) return;
+    const t = state.clock.elapsedTime;
     const dt = Math.min(delta, 0.05);
-
-    const localTarget = root.current.worldToLocal(targetWorld.current.clone());
-
-    const targetYaw =
-      root.current.rotation.y + Math.atan2(localTarget.x, localTarget.z);
-    root.current.rotation.y = THREE.MathUtils.damp(
-      root.current.rotation.y,
-      targetYaw,
-      4,
-      dt
-    );
-
-    const horiz = Math.sqrt(localTarget.x ** 2 + localTarget.z ** 2);
-    const vy = localTarget.y - SHOULDER_Y;
-
-    const L2 = L_LOWER + TAIL;
-    let dist = Math.sqrt(horiz * horiz + vy * vy);
-    const reachMax = L_UPPER + L2 - 0.05;
-    const reachMin = Math.abs(L_UPPER - L2) + 0.05;
-    dist = THREE.MathUtils.clamp(dist, reachMin, reachMax);
-
-    const a = Math.atan2(horiz, Math.max(vy, -dist));
-    const cosB =
-      (L_UPPER * L_UPPER + dist * dist - L2 * L2) / (2 * L_UPPER * dist);
-    const b = Math.acos(THREE.MathUtils.clamp(cosB, -1, 1));
-    const targetShoulderX = clampMag(a - b, Math.PI * 0.55);
-
-    const cosE =
-      (L_UPPER * L_UPPER + L2 * L2 - dist * dist) / (2 * L_UPPER * L2);
-    const targetElbow = Math.PI - Math.acos(THREE.MathUtils.clamp(cosE, -1, 1));
-
-    if (j1.current) {
-      j1.current.rotation.x = THREE.MathUtils.damp(
-        j1.current.rotation.x,
-        targetShoulderX,
-        4,
-        dt
-      );
-    }
-    if (j2.current) {
-      j2.current.rotation.x = THREE.MathUtils.damp(
-        j2.current.rotation.x,
-        targetElbow,
-        4,
-        dt
-      );
-    }
-    if (j3.current) {
-      j3.current.rotation.x = THREE.MathUtils.damp(
-        j3.current.rotation.x,
-        0,
-        4,
-        dt
-      );
-    }
-    if (j4.current) {
-      const t = performance.now() * 0.0008;
-      const targetTwist = Math.sin(t) * 0.18;
-      j4.current.rotation.z = THREE.MathUtils.damp(
-        j4.current.rotation.z,
-        targetTwist,
-        3,
-        dt
-      );
-    }
+    smoothPointer.current.lerp(hovered.current ? pointer.current : neutralPointer, 1 - Math.exp(-3 * dt));
+    const { x, y } = smoothPointer.current;
+    const offsets = [x * 0.22, y * 0.12, -y * 0.16, y * 0.1, x * 0.18, x * 0.2];
+    axisRefs.current.forEach((axis, index) => {
+      if (!axis) return;
+      const idle = Math.sin(t * 0.22 + index * 0.7) * (index < 3 ? 0.022 : 0.04);
+      axis.rotation.z = THREE.MathUtils.damp(axis.rotation.z, JOINTS[index].pose + offsets[index] + idle, 3.5, dt);
+    });
   });
 
-  return (
-    <group ref={root} position={[0, -0.95, 0]} scale={0.78}>
-      <mesh position={[0, 0.04, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.6, 0.7, 0.1, 48]} />
-        <meshPhysicalMaterial
-          color={colors.segmentDark}
-          metalness={0.6}
-          roughness={0.5}
-          clearcoat={0.3}
-        />
-      </mesh>
-      <mesh position={[0, 0.1, 0]}>
-        <torusGeometry args={[0.55, 0.011, 16, 64]} />
-        <meshStandardMaterial
-          color={colors.accent}
-          emissive={colors.accent}
-          emissiveIntensity={1.2}
-          toneMapped={false}
-        />
-      </mesh>
-      <mesh position={[0, 0.18, 0]} castShadow>
-        <cylinderGeometry args={[0.42, 0.48, 0.18, 48]} />
-        <meshPhysicalMaterial
-          color={colors.segmentMid}
-          metalness={0.85}
-          roughness={0.25}
-          clearcoat={0.5}
-        />
-      </mesh>
-      <group position={[0, 0.32, 0]}>
-        <NeutralJoint size={0.18} colors={colors} />
-        <group ref={j1}>
-          <ArmSegment length={L_UPPER} colors={colors} />
-          <group position={[0, L_UPPER, 0]}>
-            <NeutralJoint size={0.14} colors={colors} />
-            <group ref={j2}>
-              <ArmSegment length={L_LOWER} colors={colors} />
-              <group position={[0, L_LOWER, 0]}>
-                <NeutralJoint size={0.12} colors={colors} />
-                <group ref={j3}>
-                  <ArmSegment length={0.45} radius={0.085} colors={colors} />
-                  <group position={[0, 0.45, 0]}>
-                    <group ref={j4}>
-                      <Gripper colors={colors} />
-                    </group>
-                  </group>
-                </group>
-              </group>
-            </group>
-          </group>
+  const visual = (name: string) => (
+    <group position={VISUALS[name].xyz} rotation={rotation(VISUALS[name].rpy)}>
+      <primitive object={links[name]} dispose={null} />
+    </group>
+  );
+
+  const chain = (index: number): ReactNode => {
+    if (index === JOINTS.length) return <Tool />;
+    const joint = JOINTS[index];
+    return (
+      <group name={`axis-${index + 1}-origin`} position={[...joint.xyz]} rotation={rotation(joint.rpy)}>
+        <group name={`axis-${index + 1}`} ref={(axis) => { axisRefs.current[index] = axis; }} rotation={[0, 0, joint.pose]}>
+          {visual(joint.name)}
+          {chain(index + 1)}
         </group>
+      </group>
+    );
+  };
+
+  return (
+    <group position={[0.4, -1.9, 0]} scale={6} rotation={[-PI / 2, 0, 0]}>
+      <group rotation={[0, 0, PI]}>
+        {visual("base")}
+        {chain(0)}
       </group>
     </group>
   );
 }
 
-function MouseTarget({
-  targetWorld,
-}: {
-  targetWorld: React.MutableRefObject<Vector3>;
-}) {
-  const { camera } = useThree();
-  const ndc = useRef(new THREE.Vector2(0, 0));
-  const desired = useRef(new THREE.Vector3(0.5, 0.6, 1.4));
-  const raycaster = useMemo(() => new THREE.Raycaster(), []);
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      const canvas = document.querySelector(
-        "section#hero canvas"
-      ) as HTMLCanvasElement | null;
-      const rect = canvas?.getBoundingClientRect();
-      if (!rect) return;
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      ndc.current.x = THREE.MathUtils.clamp(x, -1.4, 1.4);
-      ndc.current.y = THREE.MathUtils.clamp(y, -1.4, 1.4);
-    };
-    window.addEventListener("mousemove", onMove);
-    return () => window.removeEventListener("mousemove", onMove);
-  }, []);
-
-  useFrame((_, delta) => {
-    const dt = Math.min(delta, 0.05);
-    raycaster.setFromCamera(ndc.current, camera);
-
-    // Target plane sits 1.4 units IN FRONT of the arm root (toward the camera),
-    // so the gripper reaches OUT of the screen toward the viewer instead of
-    // away into the depth. Plane normal points into the scene; closest point
-    // to origin is at -constant * normal = 1.4 units toward camera.
-    const planeNormal = camera.getWorldDirection(new THREE.Vector3());
-    const plane = new THREE.Plane(planeNormal, 1.4);
-    const hit = new THREE.Vector3();
-    if (!raycaster.ray.intersectPlane(plane, hit)) {
-      hit.copy(camera.position).add(
-        raycaster.ray.direction.clone().multiplyScalar(4.5)
-      );
-    }
-    desired.current.copy(hit);
-
-    targetWorld.current.lerp(desired.current, 1 - Math.pow(0.001, dt));
-  });
-
-  return null;
-}
-
-function OrbitingAccent({ color }: { color: string }) {
-  const ref = useRef<THREE.PointLight>(null);
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    if (ref.current) {
-      ref.current.position.x = Math.cos(t * 0.4) * 2.6;
-      ref.current.position.z = Math.sin(t * 0.4) * 2.6;
-      ref.current.position.y = 0.8 + Math.sin(t * 0.6) * 0.4;
-    }
-  });
-  return <pointLight ref={ref} color={color} intensity={3} distance={6} />;
-}
-
-function Scene({
-  targetWorld,
-  colors,
-}: {
-  targetWorld: React.MutableRefObject<Vector3>;
-  colors: ArmColors;
-}) {
+function Scene({ reduced, light, onReady }: { reduced: boolean; light: boolean; onReady: () => void }) {
   return (
     <>
-      <ambientLight intensity={0.28} />
-      <directionalLight
-        castShadow
-        position={[3, 6, 4]}
-        intensity={1.15}
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-      />
-      <pointLight position={[-3, 2, -3]} intensity={1.2} color={colors.rimLight} />
-      <OrbitingAccent color={colors.accent} />
-
-      <Float
-        speed={0.7}
-        rotationIntensity={0.05}
-        floatIntensity={0.08}
-        floatingRange={[-0.03, 0.03]}
-      >
-        <Arm targetWorld={targetWorld} colors={colors} />
-      </Float>
-
-      <MouseTarget targetWorld={targetWorld} />
-
-      <Grid
-        position={[0, -1.7, 0]}
-        args={[14, 14]}
-        cellSize={0.4}
-        cellThickness={0.5}
-        cellColor={colors.cellColor}
-        sectionSize={2}
-        sectionThickness={1}
-        sectionColor={colors.accent}
-        fadeDistance={6}
-        fadeStrength={1.2}
-        infiniteGrid
-      />
-
-      <ContactShadows
-        position={[0, -1.69, 0]}
-        opacity={0.55}
-        scale={6}
-        blur={2.6}
-        far={3}
-      />
-
-      <Sparkles
-        count={28}
-        size={2}
-        scale={5}
-        speed={0.25}
-        color={colors.accent}
-        opacity={0.5}
-      />
-
-      <Environment preset="city" />
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[1, 5, 5]} intensity={2.2} color="#eef3f8" />
+      <directionalLight position={[-4, 2, -3]} intensity={3} color="#cddbeb" />
+      <Suspense fallback={null}>
+        <Robot reduced={reduced} light={light} onReady={onReady} />
+        <ContactShadows key={String(light)} position={[0, -1.91, 0]} scale={12} opacity={light ? 0.32 : 0.55} blur={2.5} far={6} frames={1} />
+      </Suspense>
+      <Environment resolution={256}>
+        <color attach="background" args={["#606a76"]} />
+        <Lightformer form="rect" intensity={3.5} color="#ffffff" scale={[1.3, 6, 1]}
+          position={[3, 3, 4]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={2.5} color="#dce9f5" scale={[3, 5, 1]}
+          position={[-4, 2, 2]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={4} color="#ffffff" scale={[5, 1, 1]}
+          position={[0, 4, -3]} target={[0, 0, 0]} />
+      </Environment>
     </>
   );
 }
 
-export function RobotCanvas() {
-  const targetWorld = useRef<Vector3>(new THREE.Vector3(0.5, 0.6, 1.4));
-  const colors = useArmColors();
+class SceneBoundary extends Component<{ children: ReactNode; onError: () => void }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch() { this.props.onError(); }
+  render() { return this.state.failed ? null : this.props.children; }
+}
 
+export function RobotCanvas() {
+  const reduced = useReducedMotion();
+  const light = useLightTheme();
+  const [loaded, setLoaded] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const host = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!host.current) return;
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { rootMargin: "100px" });
+    observer.observe(host.current);
+    return () => observer.disconnect();
+  }, []);
+  const paused = reduced || !visible;
+  const onReady = useCallback(() => setLoaded(true), []);
+  const onError = useCallback(() => setLoaded(false), []);
   return (
-    <Canvas
-      // "percentage" → THREE.PCFShadowMap. The R3F default "soft"
-      // (PCFSoftShadowMap) has been deprecated upstream and three.js
-      // auto-falls back to PCFShadowMap with a console warning.
-      shadows="percentage"
-      dpr={[1, 1.6]}
-      camera={{ position: [3.2, 2.0, 4.6], fov: 38 }}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-      style={{ background: "transparent" }}
-    >
-      <Scene targetWorld={targetWorld} colors={colors} />
-      <EffectComposer>
-        <Bloom
-          mipmapBlur
-          intensity={0.7}
-          luminanceThreshold={0.3}
-          luminanceSmoothing={0.3}
-          radius={0.7}
-        />
-      </EffectComposer>
-    </Canvas>
+    <div ref={host} className="relative h-full w-full" role="img" aria-label="Interactive industrial robot with six independently articulated joints" data-renderer={loaded ? "webgl" : "poster"}>
+      {/* The actual CAD render also serves slow networks and devices without WebGL. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/models/ur5/poster.png" alt="" aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+        style={{ opacity: loaded ? 0 : 1 }} />
+      <SceneBoundary onError={onError}>
+        <Canvas frameloop={paused ? "demand" : "always"} dpr={[1, 1.75]}
+          camera={{ position: [5.5, 2.6, 7.5], fov: 30 }}
+          onCreated={({ camera }) => camera.lookAt(0.55, 0.05, 0)}
+          gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+          style={{ background: "transparent", opacity: loaded ? 1 : 0 }}
+          fallback={<span />}
+          aria-hidden="true"
+        >
+          <Scene reduced={paused} light={light} onReady={onReady} />
+        </Canvas>
+      </SceneBoundary>
+    </div>
   );
 }

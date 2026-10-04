@@ -10,9 +10,9 @@ Personal portfolio of **Deyu Fu** — Robotics & AI Engineer @ Agile Robots SE, 
 | Language | **React 19** + **TypeScript** |
 | Styling | **Tailwind CSS v4** with `@theme` tokens |
 | Motion | **`motion`** (Framer Motion) + native CSS scroll-driven |
-| 3D | **React Three Fiber** v9 + **drei** v10 + **@react-three/postprocessing** (Bloom) |
+| 3D | **React Three Fiber** v9 + **drei** v10, locally hosted UR5 CAD meshes |
 | Icons | **lucide-react** |
-| Type | **Inter Tight** + **JetBrains Mono** via `next/font/google` |
+| Type | **Inter Tight** + **JetBrains Mono**, locally hosted via `next/font/local` (OFL licenses included) |
 | Analytics | **Google Analytics 4** via `@next/third-parties/google` |
 | Package manager | **pnpm** |
 | Deploy | **GitHub Actions** → GitHub Pages |
@@ -39,14 +39,23 @@ data, so re-skinning the site for a different person is one file. Types are in
 
 ## Features
 
-- **Hero with a live R3F manipulator** — a 6-DOF arm built from primitives, materials respond to theme, idle joint sway, and analytic 2-bone IK so the end-effector tracks the cursor anywhere on the page (`src/components/hero/RobotCanvas.tsx`).
+- **Hero with a real six-axis CAD manipulator** — a spacious editorial layout with a locally hosted UR5 GLB, six independent revolute joints using the original ROS visual transforms and offsets, satin-aluminum and graphite materials, studio lighting, gentle idle motion, bounded pointer interaction, and paused rendering while off screen (`src/components/hero/RobotCanvas.tsx`). Model source and BSD license are in `public/models/ur5/`; `scripts/convert-ur5.py` regenerates the indexed GLB from the original DAE files.
 - **Light + dark theme** — Anthropic-style warm-cream light palette and an OpenAI-style near-black dark palette. Toggle in the nav, persisted in `localStorage`, system preference auto-detected on first visit, FOUC-prevented via an inline `<head>` script (`src/lib/theme.tsx`).
 - **Project subpages** — `/projects/[slug]/` dynamic route, statically pre-rendered for each entry in `siteContent.projects`. Each detail page has a cover, long-form overview, feature highlights, install command, sidebar metadata, image gallery and cross-links.
 - **Email obfuscation** — the contact email is split into two base64 halves in source and only reassembled client-side on user gesture, so it never appears in plain text in the static HTML.
 - **Section indicator** — sticky right-rail with intersection-observer driven active state, uniform line widths.
-- **Accessibility** — `prefers-reduced-motion` honored everywhere; 3D canvas falls back to a static SVG silhouette; semantic landmarks (`<nav>`, `<main>`, `<article>`) throughout.
+- **Accessibility** — `prefers-reduced-motion` honored everywhere; 3D canvas pauses animation and pointer tracking, with a static CAD render while the model loads or when WebGL is unavailable; semantic landmarks (`<nav>`, `<main>`, `<article>`) throughout.
 
 ## Deploy
+
+Every branch push triggers
+[`.github/workflows/cloudflare-pages.yml`](./.github/workflows/cloudflare-pages.yml).
+Cloudflare Pages uses `main` for production at https://me.deyuf.org; other
+branches deploy to isolated preview URLs. Open the deployment link in the
+GitHub Actions run summary or the `cloudflare-pages` environment to test a
+branch before merging. The workflow can also be run manually for a selected
+branch. Deployments are queued separately per branch, and newer preview pushes
+cancel older runs for that branch.
 
 Pushes to `main` trigger
 [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml), which runs
@@ -67,7 +76,7 @@ src/
 │       └── page.tsx            SSG project detail pages
 ├── components/
 │   ├── nav/                    top navigation + theme toggle
-│   ├── hero/                   hero section + R3F manipulator + IK
+│   ├── hero/                   hero section + six-axis CAD manipulator
 │   ├── about/                  about + avatar
 │   ├── projects/               featured projects list (links to subpages)
 │   ├── experience/             timeline + education
@@ -97,5 +106,7 @@ real photo:
 
 ## License
 
-MIT for the code under this repo. Project screenshots embedded on the detail
-pages are hotlinked from their respective project repositories.
+MIT for the code under this repo. The UR5 geometry uses the included BSD license,
+and the local fonts use their included OFL licenses. Project covers are mirrored
+from the owner’s project repositories; source URLs are in `public/projects/SOURCES.md`.
+Additional project gallery screenshots remain linked to their source repositories.

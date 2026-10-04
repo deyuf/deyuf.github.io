@@ -2,7 +2,7 @@ name: Deploy to Cloudflare Pages
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   workflow_dispatch:
 
 permissions:
@@ -10,15 +10,15 @@ permissions:
   deployments: write
 
 concurrency:
-  group: cloudflare-pages
-  cancel-in-progress: false
+  group: cloudflare-pages-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
       name: cloudflare-pages
-      url: https://me.deyuf.org
+      url: ${{ steps.deployment.outputs.deployment-url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,9 +42,27 @@ jobs:
         run: pnpm build
 
       - name: Deploy to Cloudflare Pages
+        id: deployment
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy out --project-name=deyuf-portfolio --branch=main
+          command: pages deploy out --project-name=deyuf-portfolio --branch="${{ github.ref_name }}"
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish deployment links
+        env:
+          DEPLOY_BRANCH: ${{ github.ref_name }}
+          DEPLOY_ENVIRONMENT: ${{ steps.deployment.outputs.pages-environment }}
+          DEPLOY_URL: ${{ steps.deployment.outputs.deployment-url }}
+          DEPLOY_ALIAS_URL: ${{ steps.deployment.outputs.pages-deployment-alias-url }}
+        run: |
+          {
+            printf '### Cloudflare Pages deployment\n\n'
+            printf 'Branch: `%s`\n\n' "$DEPLOY_BRANCH"
+            printf 'Environment: `%s`\n\n' "$DEPLOY_ENVIRONMENT"
+            printf '[Open deployment](%s)\n\n' "$DEPLOY_URL"
+            if [ -n "$DEPLOY_ALIAS_URL" ]; then
+              printf '[Open branch preview](%s)\n' "$DEPLOY_ALIAS_URL"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

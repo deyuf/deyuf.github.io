@@ -53,7 +53,7 @@ export function Nav() {
       }}
       className="fixed inset-x-0 top-0 z-40"
     >
-      <nav className="mx-auto flex max-w-[1280px] items-center justify-between px-5 py-4 md:px-12">
+      <nav className="mx-auto flex max-w-[1600px] items-center justify-between px-6 py-5 md:px-12 lg:px-[5.5vw]">
         <a href={sectionHref("hero")} className="flex items-center gap-2.5 font-mono text-sm">
           {siteContent.avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -74,7 +74,7 @@ export function Nav() {
           )}
           <span className="font-medium">{siteContent.name}</span>
         </a>
-        <ul className="hidden items-center gap-8 text-sm md:flex">
+        <ul className="hidden items-center gap-8 text-sm lg:flex">
           {LINKS.map((l) => (
             <li key={l.id}>
               <a
@@ -91,7 +91,7 @@ export function Nav() {
           <ThemeToggle />
           <button
             type="button"
-            className="rounded-full border border-border px-3 py-1.5 text-sm md:hidden"
+            className="rounded-full border border-border px-3 py-1.5 text-sm lg:hidden"
             aria-expanded={menuOpen}
             aria-controls="mobile-navigation"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -102,14 +102,14 @@ export function Nav() {
             href={siteContent.contact.linkedin}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden rounded-full border border-border px-4 py-1.5 text-xs font-mono uppercase tracking-widest transition hover:border-border-strong md:inline-flex"
+            className="hidden rounded-full border border-border px-4 py-1.5 text-xs font-mono uppercase tracking-widest transition hover:border-border-strong lg:inline-flex"
           >
             LinkedIn
           </a>
         </div>
       </nav>
       {menuOpen && (
-        <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-border bg-bg px-5 py-4 md:hidden">
+        <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-border bg-bg px-5 py-4 lg:hidden">
           <ul className="flex flex-wrap gap-x-6 gap-y-4">
             {LINKS.map((link) => (
               <li key={link.id}>
